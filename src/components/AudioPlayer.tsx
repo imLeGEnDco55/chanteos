@@ -1,8 +1,9 @@
-import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, MessageSquare } from 'lucide-react';
+import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { formatTime } from '@/lib/syllables';
 import { cn } from '@/lib/utils';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 interface AudioPlayerProps {
   isPlaying: boolean;
@@ -37,11 +38,18 @@ export function AudioPlayer({
   onSkipBack,
   onSkipForward,
 }: AudioPlayerProps) {
+  const keyboardHeight = useKeyboardHeight();
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Dynamic bottom position based on keyboard visibility
+  const bottomStyle = keyboardHeight > 0 ? { bottom: `${keyboardHeight}px` } : {};
 
   if (!hasAudio) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-primary p-4 safe-area-bottom">
+      <div 
+        className="fixed left-0 right-0 bg-primary p-4 safe-area-bottom transition-all duration-150"
+        style={{ bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
+      >
         <Button 
           onClick={onLoadAudio}
           variant="secondary" 
@@ -55,7 +63,10 @@ export function AudioPlayer({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-primary safe-area-bottom">
+    <div 
+      className="fixed left-0 right-0 bg-primary safe-area-bottom transition-all duration-150"
+      style={{ bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
+    >
       {/* Progress bar with time labels */}
       <div className="px-4 pt-3">
         <div className="flex items-center gap-3">
