@@ -62,10 +62,17 @@ export function AudioPlayer({
     );
   }
 
+  // Prevent keyboard from closing when interacting with player controls
+  const preventFocusLoss = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <div 
       className="fixed left-0 right-0 bg-primary safe-area-bottom transition-all duration-150"
       style={{ bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
+      onMouseDown={preventFocusLoss}
+      onTouchStart={preventFocusLoss}
     >
       {/* Progress bar with time labels */}
       <div className="px-4 pt-3">
