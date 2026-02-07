@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import type { AudioPlayerState } from '@/types/song';
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5];
+const SKIP_SECONDS = 3;
 
 export function useAudioPlayer(audioData: string | null) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -86,8 +87,25 @@ export function useAudioPlayer(audioData: string | null) {
 
   const seek = useCallback((time: number) => {
     if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setState(prev => ({ ...prev, currentTime: time }));
+      const clampedTime = Math.max(0, Math.min(time, audioRef.current.duration || 0));
+      audioRef.current.currentTime = clampedTime;
+      setState(prev => ({ ...prev, currentTime: clampedTime }));
+    }
+  }, []);
+
+  const skipBack = useCallback(() => {
+    if (audioRef.current) {
+      const newTime = Math.max(0, audioRef.current.currentTime - SKIP_SECONDS);
+      audioRef.current.currentTime = newTime;
+      setState(prev => ({ ...prev, currentTime: newTime }));
+    }
+  }, []);
+
+  const skipForward = useCallback(() => {
+    if (audioRef.current) {
+      const newTime = Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + SKIP_SECONDS);
+      audioRef.current.currentTime = newTime;
+      setState(prev => ({ ...prev, currentTime: newTime }));
     }
   }, []);
 
@@ -117,6 +135,8 @@ export function useAudioPlayer(audioData: string | null) {
     pause,
     togglePlay,
     seek,
+    skipBack,
+    skipForward,
     setPlaybackRate,
     cyclePlaybackRate,
     toggleLoop,

@@ -1,4 +1,4 @@
-import { Plus, ChevronLeft } from 'lucide-react';
+import { Plus, ChevronLeft, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,9 +8,16 @@ import { AudioPlayer } from './AudioPlayer';
 import { ThemeToggle } from './ThemeToggle';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { createEmptyLine } from '@/hooks/useSongs';
-import { formatTime } from '@/lib/syllables';
+import { formatTime, parseTime } from '@/lib/syllables';
 import type { Song, LyricLine as LyricLineType } from '@/types/song';
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface SongEditorProps {
   song: Song;
@@ -23,6 +30,26 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const player = useAudioPlayer(song.audioData || null);
+
+  // Find the active line based on current playback time
+  const activeLineIndex = useMemo(() => {
+    if (!player.isPlaying && player.currentTime === 0) return -1;
+    
+    // Find the last line whose timestamp is <= current time
+    let activeIndex = -1;
+    for (let i = 0; i < song.lyrics.length; i++) {
+      const line = song.lyrics[i];
+      if (line.timestamp) {
+        const lineTime = parseTime(line.timestamp);
+        if (lineTime <= player.currentTime) {
+          activeIndex = i;
+        } else {
+          break;
+        }
+      }
+    }
+    return activeIndex;
+  }, [player.currentTime, player.isPlaying, song.lyrics]);
 
   const handleAddLine = () => {
     const newLyrics = [...song.lyrics, createEmptyLine()];
@@ -56,12 +83,10 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Pass file to parent to save in IndexedDB
     onUpdate({}, file);
   };
 
-  // Calcular total de sílabas
+  // Total syllables
   const totalSyllables = song.lyrics.reduce((sum, line) => sum + line.syllableCount, 0);
 
   return (
@@ -72,34 +97,42 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
           <ChevronLeft className="h-5 w-5" />
         </Button>
         
-        <Input
-          type="text"
-          value={song.title}
-          onChange={(e) => onUpdate({ title: e.target.value })}
-          className="flex-1 text-lg font-semibold bg-transparent border-none focus-visible:ring-1"
-          placeholder="Título de la canción"
-        />
+        <div className="flex-1 min-w-0">
+          <Input
+            type="text"
+            value={song.title}
+            onChange={(e) => onUpdate({ title: e.target.value })}
+            className="text-lg font-bold bg-transparent border-none focus-visible:ring-1 px-0"
+            placeholder="Título de la canción"
+          />
+          {song.audioFileName && (
+            <p className="text-xs text-accent font-medium uppercase tracking-wide truncate">
+              {song.audioFileName.replace(/\.[^/.]+$/, '')}
+            </p>
+          )}
+        </div>
 
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={() => setShowNotes(!showNotes)}
-          className="text-xs"
-        >
-          {showNotes ? 'Letras' : 'Notas'}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowNotes(!showNotes)}>
+              {showNotes ? 'Ver letras' : 'Ver notas'}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLoadAudio}>
+              Cambiar audio
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <ThemeToggle />
       </header>
 
-      {/* Stats bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-muted/50 text-xs text-muted-foreground">
-        <span>{song.lyrics.length} líneas</span>
-        <span>{totalSyllables} sílabas</span>
-      </div>
-
       {/* Content */}
-      <ScrollArea className="flex-1 pb-24">
+      <ScrollArea className="flex-1 pb-32">
         {showNotes ? (
           <div className="p-4">
             <Textarea
@@ -110,24 +143,25 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
             />
           </div>
         ) : (
-          <div className="p-2">
-            {/* Column headers */}
-            <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground border-b border-border/50 mb-2">
-              <span className="min-w-[60px] text-center">Tiempo</span>
-              <span className="flex-1 text-center">Letra</span>
-              <span className="min-w-[50px] text-right">Sílab.</span>
-            </div>
-
+          <div className="py-2">
             {/* Lyrics lines */}
             {song.lyrics.map((line, index) => (
-              <LyricLine
+              <div
                 key={line.id}
-                line={line}
-                onUpdate={(updated) => handleUpdateLine(index, updated)}
-                onDelete={() => handleDeleteLine(index)}
-                onMarkTimestamp={() => handleMarkTimestamp(index)}
-                canDelete={song.lyrics.length > 1}
-              />
+                className={cn(
+                  "transition-colors duration-200",
+                  activeLineIndex === index && "bg-primary/10"
+                )}
+              >
+                <LyricLine
+                  line={line}
+                  onUpdate={(updated) => handleUpdateLine(index, updated)}
+                  onDelete={() => handleDeleteLine(index)}
+                  onMarkTimestamp={() => handleMarkTimestamp(index)}
+                  canDelete={song.lyrics.length > 1}
+                  isActive={activeLineIndex === index}
+                />
+              </div>
             ))}
 
             {/* Add line button */}
@@ -139,6 +173,13 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
               <Plus className="h-4 w-4" />
               Agregar línea
             </Button>
+
+            {/* Stats */}
+            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
+              <span>{song.lyrics.length} líneas</span>
+              <span>•</span>
+              <span>{totalSyllables} sílabas</span>
+            </div>
           </div>
         )}
       </ScrollArea>
@@ -166,6 +207,8 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
         onCyclePlaybackRate={player.cyclePlaybackRate}
         onToggleLoop={player.toggleLoop}
         onLoadAudio={handleLoadAudio}
+        onSkipBack={player.skipBack}
+        onSkipForward={player.skipForward}
       />
     </div>
   );
