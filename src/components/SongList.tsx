@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ThemeToggle } from './ThemeToggle';
 import type { Song } from '@/types/song';
 
 interface SongListProps {
@@ -34,9 +35,12 @@ export function SongList({ songs, onSelectSong, onCreateSong, onDeleteSong }: So
             <Music className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold">Mis Canciones</h1>
           </div>
-          <Button onClick={onCreateSong} size="icon" className="rounded-full">
-            <Plus className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button onClick={onCreateSong} size="icon" className="rounded-full">
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
