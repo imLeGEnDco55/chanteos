@@ -12,6 +12,7 @@ interface LyricLineProps {
   onDelete: () => void;
   onMarkTimestamp: () => void;
   canDelete: boolean;
+  isActive?: boolean;
 }
 
 export function LyricLine({
@@ -20,6 +21,7 @@ export function LyricLine({
   onDelete,
   onMarkTimestamp,
   canDelete,
+  isActive = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -34,8 +36,9 @@ export function LyricLine({
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 py-1 px-2 rounded-lg transition-colors",
-        isFocused && "bg-accent/50"
+        "flex items-center gap-2 py-2 px-3 transition-colors",
+        isFocused && "bg-accent/30",
+        isActive && !isFocused && "bg-primary/10"
       )}
     >
       {/* Timestamp (Ala izquierda) */}
@@ -44,18 +47,20 @@ export function LyricLine({
           variant="ghost"
           size="icon"
           onClick={onMarkTimestamp}
-          className="h-6 w-6 text-muted-foreground hover:text-primary"
+          className={cn(
+            "h-6 w-6 hover:text-primary",
+            isActive ? "text-accent" : "text-muted-foreground"
+          )}
           title="Marcar tiempo actual"
         >
           <Clock className="h-3 w-3" />
         </Button>
-        <Input
-          type="text"
-          value={line.timestamp}
-          onChange={handleTimestampChange}
-          placeholder="0:00"
-          className="w-[45px] h-7 text-xs text-center p-1 font-mono bg-transparent border-none focus-visible:ring-1"
-        />
+        <span className={cn(
+          "text-xs font-mono min-w-[35px]",
+          isActive ? "text-accent font-medium" : "text-muted-foreground"
+        )}>
+          {line.timestamp || '00:00'}
+        </span>
       </div>
 
       {/* Texto de la letra (Centro) */}
@@ -66,14 +71,17 @@ export function LyricLine({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder="Escribe aquí..."
-        className="flex-1 text-center h-9 bg-transparent border-none focus-visible:ring-1"
+        className={cn(
+          "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
+          isActive && "text-foreground font-medium"
+        )}
       />
 
       {/* Contador de sílabas (Ala derecha) */}
-      <div className="flex items-center gap-1 min-w-[50px] justify-end">
+      <div className="flex items-center gap-1 min-w-[40px] justify-end">
         <span className={cn(
-          "text-sm font-mono w-6 text-center",
-          line.syllableCount > 0 ? "text-primary" : "text-muted-foreground"
+          "text-sm font-mono",
+          isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground"
         )}>
           {line.syllableCount}
         </span>
@@ -83,7 +91,7 @@ export function LyricLine({
             variant="ghost"
             size="icon"
             onClick={onDelete}
-            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
