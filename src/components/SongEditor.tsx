@@ -1,10 +1,11 @@
-import { Plus, ChevronLeft, Save } from 'lucide-react';
+import { Plus, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LyricLine } from './LyricLine';
 import { AudioPlayer } from './AudioPlayer';
+import { ThemeToggle } from './ThemeToggle';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime } from '@/lib/syllables';
@@ -14,7 +15,7 @@ import { useRef, useState } from 'react';
 interface SongEditorProps {
   song: Song;
   onBack: () => void;
-  onUpdate: (updates: Partial<Song>) => void;
+  onUpdate: (updates: Partial<Song>, audioFile?: File) => void;
 }
 
 export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
@@ -56,12 +57,8 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create blob URL instead of base64 - much more efficient
-    const audioBlobUrl = URL.createObjectURL(file);
-    onUpdate({ 
-      audioData: audioBlobUrl, 
-      audioFileName: file.name 
-    });
+    // Pass file to parent to save in IndexedDB
+    onUpdate({}, file);
   };
 
   // Calcular total de sílabas
@@ -91,6 +88,8 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
         >
           {showNotes ? 'Letras' : 'Notas'}
         </Button>
+
+        <ThemeToggle />
       </header>
 
       {/* Stats bar */}

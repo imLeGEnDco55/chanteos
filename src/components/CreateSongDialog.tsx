@@ -13,7 +13,7 @@ import {
 interface CreateSongDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateSong: (title: string, audioFileName: string, audioData: string) => void;
+  onCreateSong: (title: string, audioFile: File | null) => void;
 }
 
 export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSongDialogProps) {
@@ -36,16 +36,7 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
     setIsLoading(true);
 
     try {
-      let audioBlobUrl = '';
-      let audioFileName = '';
-
-      if (audioFile) {
-        audioFileName = audioFile.name;
-        // Create a blob URL instead of base64 - much more efficient
-        audioBlobUrl = URL.createObjectURL(audioFile);
-      }
-
-      onCreateSong(title.trim(), audioFileName, audioBlobUrl);
+      onCreateSong(title.trim(), audioFile);
       
       // Reset form
       setTitle('');

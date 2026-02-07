@@ -12,8 +12,8 @@ const Index = () => {
 
   const selectedSong = selectedSongId ? getSong(selectedSongId) : null;
 
-  const handleCreateSong = (title: string, audioFileName: string, audioData: string) => {
-    const newSong = createSong(title, audioFileName, audioData);
+  const handleCreateSong = async (title: string, audioFile: File | null) => {
+    const newSong = await createSong(title, audioFile);
     setSelectedSongId(newSong.id);
   };
 
@@ -25,14 +25,14 @@ const Index = () => {
     setSelectedSongId(null);
   };
 
-  const handleUpdateSong = (updates: Partial<Song>) => {
+  const handleUpdateSong = (updates: Partial<Song>, audioFile?: File) => {
     if (selectedSongId) {
-      updateSong(selectedSongId, updates);
+      updateSong(selectedSongId, updates, audioFile);
     }
   };
 
-  const handleDeleteSong = (songId: string) => {
-    deleteSong(songId);
+  const handleDeleteSong = async (songId: string) => {
+    await deleteSong(songId);
     if (selectedSongId === songId) {
       setSelectedSongId(null);
     }
