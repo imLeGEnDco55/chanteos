@@ -36,20 +36,16 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
     setIsLoading(true);
 
     try {
-      let audioData = '';
+      let audioBlobUrl = '';
       let audioFileName = '';
 
       if (audioFile) {
         audioFileName = audioFile.name;
-        audioData = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(audioFile);
-        });
+        // Create a blob URL instead of base64 - much more efficient
+        audioBlobUrl = URL.createObjectURL(audioFile);
       }
 
-      onCreateSong(title.trim(), audioFileName, audioData);
+      onCreateSong(title.trim(), audioFileName, audioBlobUrl);
       
       // Reset form
       setTitle('');

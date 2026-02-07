@@ -56,15 +56,12 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const audioData = event.target?.result as string;
-      onUpdate({ 
-        audioData, 
-        audioFileName: file.name 
-      });
-    };
-    reader.readAsDataURL(file);
+    // Create blob URL instead of base64 - much more efficient
+    const audioBlobUrl = URL.createObjectURL(file);
+    onUpdate({ 
+      audioData: audioBlobUrl, 
+      audioFileName: file.name 
+    });
   };
 
   // Calcular total de sílabas
