@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { generateRhymes } from '@/lib/gemini';
+import { toast } from 'sonner';
 
 interface RhymeSuggestions {
   rhymes: string[];
@@ -14,7 +15,15 @@ export function useRhymeSuggestions() {
 
   const fetchSuggestions = useCallback(async (word: string) => {
     if (!word.trim()) return;
-    
+
+    // Check for API Key first
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) {
+      toast.error('Configura tu API Key de Gemini en Ajustes para ver sugerencias');
+      setError('Falta API Key');
+      return;
+    }
+
     const cleanWord = word.trim().toLowerCase().replace(/[^\wáéíóúüñ]/gi, '');
     if (!cleanWord) return;
 
@@ -23,17 +32,7 @@ export function useRhymeSuggestions() {
     setError(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('rhyme-suggestions', {
-        body: { word: cleanWord }
-      });
-
-      if (fnError) {
-        throw new Error(fnError.message);
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      const data = await generateRhymes(cleanWord, apiKey);
 
       setSuggestions({
         rhymes: data.rhymes || [],
@@ -42,6 +41,7 @@ export function useRhymeSuggestions() {
     } catch (err) {
       console.error('Error fetching suggestions:', err);
       setError(err instanceof Error ? err.message : 'Error al obtener sugerencias');
+      toast.error('Error al conectar con la IA');
       setSuggestions(null);
     } finally {
       setIsLoading(false);

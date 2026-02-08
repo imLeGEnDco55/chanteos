@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Settings, Plus, Trash2, Moon, Sun } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, Plus, Trash2, Moon, Sun, Key } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/useTheme';
 import type { PromptTemplate } from '@/types/song';
+import { toast } from 'sonner';
 
 interface SettingsDialogProps {
   prompts: PromptTemplate[];
@@ -35,6 +36,20 @@ export function SettingsDialog({
   const [newName, setNewName] = useState('');
   const [newContent, setNewContent] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // API Key State
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key');
+    if (storedKey) setApiKey(storedKey);
+  }, []);
+
+  const handleSaveKey = () => {
+    localStorage.setItem('gemini_api_key', apiKey);
+    toast.success('API Key guardada correctamente');
+  };
 
   const handleAdd = () => {
     if (newName.trim() && newContent.trim()) {
@@ -85,6 +100,39 @@ export function SettingsDialog({
 
             <Separator />
 
+            {/* AI Configuration Section */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Configuración IA (Gemini)
+              </h3>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Key className="h-4 w-4 text-primary" />
+                  <Label htmlFor="api-key" className="cursor-pointer font-medium">
+                    Google Gemini API Key
+                  </Label>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    id="api-key"
+                    type={showKey ? "text" : "password"}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={handleSaveKey}>
+                    Guardar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  La clave se guarda localmente en tu navegador. Necesaria para sugerencias de rimas.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Prompt Library Section */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -124,7 +172,7 @@ export function SettingsDialog({
                     ) : (
                       <>
                         <div className="flex items-center justify-between">
-                          <h4 
+                          <h4
                             className="font-medium cursor-pointer hover:text-primary"
                             onClick={() => setEditingId(prompt.id)}
                           >
@@ -139,7 +187,7 @@ export function SettingsDialog({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                        <pre 
+                        <pre
                           className="text-sm text-muted-foreground whitespace-pre-wrap font-mono bg-muted/50 p-2 rounded cursor-pointer hover:bg-muted"
                           onClick={() => setEditingId(prompt.id)}
                         >
