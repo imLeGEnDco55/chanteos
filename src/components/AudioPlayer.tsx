@@ -1,9 +1,11 @@
-import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2 } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { formatTime } from '@/lib/syllables';
 import { cn } from '@/lib/utils';
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
+import { RhymePanel } from './RhymePanel';
 import type { LoopState } from '@/types/song';
 
 interface AudioPlayerProps {
@@ -27,6 +29,16 @@ interface AudioPlayerProps {
   onOpenPromptLibrary?: () => void;
   onUndo?: () => void;
   canUndo?: boolean;
+  // Rhyme panel props
+  showRhymePanel?: boolean;
+  onToggleRhymePanel?: () => void;
+  selectedWord?: string | null;
+  rhymes?: string[];
+  related?: string[];
+  isLoadingRhymes?: boolean;
+  rhymeError?: string | null;
+  onRhymeWordClick?: (word: string) => void;
+  onRetryRhymes?: () => void;
 }
 
 export function AudioPlayer({
@@ -50,12 +62,18 @@ export function AudioPlayer({
   onOpenPromptLibrary,
   onUndo,
   canUndo = false,
+  showRhymePanel = false,
+  onToggleRhymePanel,
+  selectedWord,
+  rhymes = [],
+  related = [],
+  isLoadingRhymes = false,
+  rhymeError,
+  onRhymeWordClick,
+  onRetryRhymes,
 }: AudioPlayerProps) {
   const keyboardHeight = useKeyboardHeight();
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  // Dynamic bottom position based on keyboard visibility
-  const bottomStyle = keyboardHeight > 0 ? { bottom: `${keyboardHeight}px` } : {};
 
   if (!hasAudio) {
     return (
@@ -87,8 +105,32 @@ export function AudioPlayer({
       onMouseDown={preventFocusLoss}
       onTouchStart={preventFocusLoss}
     >
+      {/* Swipe handle to toggle rhyme panel */}
+      <div 
+        className="flex justify-center py-1 cursor-pointer"
+        onClick={onToggleRhymePanel}
+      >
+        {showRhymePanel ? (
+          <ChevronDown className="h-5 w-5 text-primary-foreground/60" />
+        ) : (
+          <ChevronUp className="h-5 w-5 text-primary-foreground/60" />
+        )}
+      </div>
+
+      {/* Rhyme suggestions panel */}
+      <RhymePanel
+        isVisible={showRhymePanel}
+        selectedWord={selectedWord || null}
+        rhymes={rhymes}
+        related={related}
+        isLoading={isLoadingRhymes}
+        error={rhymeError || null}
+        onWordClick={onRhymeWordClick || (() => {})}
+        onRetry={onRetryRhymes || (() => {})}
+      />
+
       {/* Progress bar with time labels */}
-      <div className="px-4 pt-3">
+      <div className="px-4 pt-2">
         <div className="flex items-center gap-3">
           <span className="text-xs text-primary-foreground/80 font-mono min-w-[40px]">
             {formatTime(currentTime)}

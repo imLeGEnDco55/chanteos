@@ -9,6 +9,7 @@ import { AudioPlayer } from './AudioPlayer';
 import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useLyricsHistory } from '@/hooks/useLyricsHistory';
+import { useRhymeSuggestions } from '@/hooks/useRhymeSuggestions';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime, parseTime } from '@/lib/syllables';
 import type { Song, LyricLine as LyricLineType, PromptTemplate } from '@/types/song';
@@ -31,11 +32,13 @@ interface SongEditorProps {
 export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps) {
   const [showNotes, setShowNotes] = useState(false);
   const [showPromptLibrary, setShowPromptLibrary] = useState(false);
+  const [showRhymePanel, setShowRhymePanel] = useState(false);
   const [focusedLineIndex, setFocusedLineIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const player = useAudioPlayer(song.audioData || null);
   const lyricsHistory = useLyricsHistory(song.lyrics);
+  const rhymeSuggestions = useRhymeSuggestions();
 
   // Reset history when song changes
   useEffect(() => {
@@ -157,6 +160,23 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     onUpdate({}, file);
   };
 
+  // Handle word selection for rhyme suggestions
+  const handleWordSelect = useCallback((word: string) => {
+    rhymeSuggestions.fetchSuggestions(word);
+    setShowRhymePanel(true);
+  }, [rhymeSuggestions]);
+
+  // Handle clicking a rhyme word to insert it
+  const handleRhymeWordClick = useCallback((word: string) => {
+    // Fetch new rhymes for the clicked word
+    rhymeSuggestions.fetchSuggestions(word);
+  }, [rhymeSuggestions]);
+
+  // Toggle rhyme panel
+  const handleToggleRhymePanel = useCallback(() => {
+    setShowRhymePanel(prev => !prev);
+  }, []);
+
   // Total syllables (only count lyric lines)
   const totalSyllables = song.lyrics
     .filter(line => line.type !== 'prompt')
@@ -205,7 +225,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       </header>
 
       {/* Content */}
-      <ScrollArea className="flex-1 pb-32">
+      <ScrollArea className="flex-1 pb-40">
         {showNotes ? (
           <div className="p-4">
             <Textarea
@@ -241,6 +261,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
                     onMarkTimestamp={() => handleMarkTimestamp(index)}
                     onFocus={() => setFocusedLineIndex(index)}
                     onBlur={() => setFocusedLineIndex(null)}
+                    onWordSelect={handleWordSelect}
                     canDelete={song.lyrics.length > 1}
                     isActive={activeLineIndex === index}
                   />
@@ -299,7 +320,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         insertOnly
       />
 
-      {/* Audio Player */}
+      {/* Audio Player with Rhyme Panel */}
       <AudioPlayer
         isPlaying={player.isPlaying}
         currentTime={player.currentTime}
@@ -321,6 +342,15 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         onOpenPromptLibrary={handleOpenPromptLibrary}
         onUndo={handleUndo}
         canUndo={lyricsHistory.canUndo}
+        showRhymePanel={showRhymePanel}
+        onToggleRhymePanel={handleToggleRhymePanel}
+        selectedWord={rhymeSuggestions.selectedWord}
+        rhymes={rhymeSuggestions.suggestions?.rhymes || []}
+        related={rhymeSuggestions.suggestions?.related || []}
+        isLoadingRhymes={rhymeSuggestions.isLoading}
+        rhymeError={rhymeSuggestions.error}
+        onRhymeWordClick={handleRhymeWordClick}
+        onRetryRhymes={rhymeSuggestions.retry}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock } from 'lucide-react';
@@ -13,6 +13,7 @@ interface LyricLineProps {
   onMarkTimestamp: () => void;
   onFocus?: () => void;
   onBlur?: () => void;
+  onWordSelect?: (word: string) => void;
   canDelete: boolean;
   isActive?: boolean;
 }
@@ -24,10 +25,12 @@ export function LyricLine({
   onMarkTimestamp,
   onFocus,
   onBlur,
+  onWordSelect,
   canDelete,
   isActive = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -46,6 +49,50 @@ export function LyricLine({
   const handleTimestampChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({ ...line, timestamp: e.target.value });
   };
+
+  // Detect text selection and extract the selected word
+  const handleSelect = useCallback(() => {
+    if (!inputRef.current || !onWordSelect) return;
+    
+    const start = inputRef.current.selectionStart || 0;
+    const end = inputRef.current.selectionEnd || 0;
+    
+    if (start !== end) {
+      // There's a selection - extract the selected text
+      const selectedText = line.text.substring(start, end).trim();
+      if (selectedText && selectedText.length > 0) {
+        onWordSelect(selectedText);
+      }
+    } else {
+      // No selection - try to get the word at cursor position
+      const text = line.text;
+      let wordStart = start;
+      let wordEnd = start;
+      
+      // Find word boundaries
+      while (wordStart > 0 && /[\wáéíóúüñ]/i.test(text[wordStart - 1])) {
+        wordStart--;
+      }
+      while (wordEnd < text.length && /[\wáéíóúüñ]/i.test(text[wordEnd])) {
+        wordEnd++;
+      }
+      
+      if (wordEnd > wordStart) {
+        const word = text.substring(wordStart, wordEnd).trim();
+        if (word.length > 0) {
+          onWordSelect(word);
+        }
+      }
+    }
+  }, [line.text, onWordSelect]);
+
+  // Handle double-click to select word
+  const handleDoubleClick = useCallback(() => {
+    // Small delay to let the browser select the word first
+    setTimeout(() => {
+      handleSelect();
+    }, 10);
+  }, [handleSelect]);
 
   return (
     <div 
@@ -79,11 +126,14 @@ export function LyricLine({
 
       {/* Texto de la letra (Centro) */}
       <Input
+        ref={inputRef}
         type="text"
         value={line.text}
         onChange={handleTextChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onDoubleClick={handleDoubleClick}
+        onSelect={handleSelect}
         placeholder="Escribe aquí..."
         className={cn(
           "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
