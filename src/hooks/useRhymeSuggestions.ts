@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { generateRhymes } from '@/lib/gemini';
+import { useSettings } from '@/hooks/useSettings';
 import { toast } from 'sonner';
 
 interface RhymeSuggestions {
@@ -12,12 +13,12 @@ export function useRhymeSuggestions() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { apiKey, model } = useSettings();
 
   const fetchSuggestions = useCallback(async (word: string) => {
     if (!word.trim()) return;
 
     // Check for API Key first
-    const apiKey = localStorage.getItem('gemini_api_key');
     if (!apiKey) {
       toast.error('Configura tu API Key de Gemini en Ajustes para ver sugerencias');
       setError('Falta API Key');
@@ -32,7 +33,7 @@ export function useRhymeSuggestions() {
     setError(null);
 
     try {
-      const data = await generateRhymes(cleanWord, apiKey);
+      const data = await generateRhymes(cleanWord, apiKey, model);
 
       setSuggestions({
         rhymes: data.rhymes || [],
@@ -46,7 +47,7 @@ export function useRhymeSuggestions() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [apiKey, model]);
 
   const retry = useCallback(() => {
     if (selectedWord) {

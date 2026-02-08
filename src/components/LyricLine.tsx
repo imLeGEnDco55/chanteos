@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, memo } from 'react';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock } from 'lucide-react';
 import { updateLineText } from '@/hooks/useSongs';
@@ -32,7 +32,7 @@ export const LyricLine = memo(function LyricLine({
   isActive = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -44,8 +44,16 @@ export const LyricLine = memo(function LyricLine({
     onBlur?.(index);
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onUpdate(index, updateLineText(line, e.target.value));
+  };
+
+  // Handle Shift+Enter for line breaks
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      // Allow default behavior (line break)
+      e.stopPropagation();
+    }
   };
 
   // Detect text selection and extract the selected word
@@ -123,19 +131,20 @@ export const LyricLine = memo(function LyricLine({
       </div>
 
       {/* Texto de la letra (Centro) */}
-      <Input
+      <Textarea
         ref={inputRef}
-        type="text"
         value={line.text}
         onChange={handleTextChange}
+        onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
         onDoubleClick={handleDoubleClick}
         placeholder="Escribe aquí..."
         className={cn(
-          "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
+          "flex-1 text-center min-h-[2rem] max-h-[10rem] py-1 bg-transparent border-none focus-visible:ring-1 resize-none overflow-y-auto",
           isActive && "text-foreground font-medium"
         )}
+        rows={1}
       />
 
       {/* Contador de sílabas (Ala derecha) */}

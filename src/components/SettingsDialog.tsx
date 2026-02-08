@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings, Plus, Trash2, Moon, Sun, Key, Download } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/useTheme';
+import { useSettings } from '@/hooks/useSettings';
 import type { PromptTemplate } from '@/types/song';
 import { toast } from 'sonner';
 
@@ -33,23 +35,28 @@ export function SettingsDialog({
   onDeletePrompt,
 }: SettingsDialogProps) {
   const { isDark, toggleTheme } = useTheme();
+  const { apiKey: storedKey, model: storedModel, saveSettings } = useSettings();
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newContent, setNewContent] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
-  // API Key State
+  // Local state for editing
   const [apiKey, setApiKey] = useState('');
+  const [model, setModel] = useState('gemini-2.0-flash');
   const [showKey, setShowKey] = useState(false);
 
   useEffect(() => {
-    const storedKey = localStorage.getItem('gemini_api_key');
-    if (storedKey) setApiKey(storedKey);
-  }, []);
+    if (open) {
+      setApiKey(storedKey);
+      setModel(storedModel);
+    }
+  }, [open, storedKey, storedModel]);
 
-  const handleSaveKey = () => {
-    localStorage.setItem('gemini_api_key', apiKey);
-    toast.success('API Key guardada correctamente');
+  const handleSaveSettings = () => {
+    saveSettings(apiKey, model);
+    toast.success('Ajustes guardados correctamente');
   };
 
   const handleExportPrompts = () => {
@@ -74,7 +81,7 @@ export function SettingsDialog({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Ajustes">
           <Settings className="h-5 w-5" />
@@ -137,13 +144,38 @@ export function SettingsDialog({
                     placeholder="AIzaSy..."
                     className="flex-1"
                   />
-                  <Button variant="outline" size="sm" onClick={handleSaveKey}>
-                    Guardar
-                  </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   La clave se guarda localmente en tu navegador. Necesaria para sugerencias de rimas.
                 </p>
+
+                {/* MODEL SELECTOR */}
+                <div className="space-y-2 pt-2">
+                  <Label>Modelo de IA</Label>
+                  <Select value={model} onValueChange={setModel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gemini-2.0-flash">
+                        ⚡ Gemini 2.0 Flash (Rápido/Estable)
+                      </SelectItem>
+                      <SelectItem value="gemini-2.5-flash-lite">
+                        🚀 Gemini 2.5 Flash Lite (Más Rápido/Económico)
+                      </SelectItem>
+                      <SelectItem value="gemini-3-flash-preview">
+                        🧪 Gemini 3 Flash Preview (Experimental)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Usa 2.0 para balance, 2.5 Lite para máxima velocidad, 3 Preview para las últimas capacidades (experimental).
+                  </p>
+                </div>
+
+                <Button onClick={handleSaveSettings} className="w-full">
+                  Guardar Ajustes
+                </Button>
               </div>
             </div>
 
