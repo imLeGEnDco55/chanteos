@@ -35,6 +35,11 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const [showRhymePanel, setShowRhymePanel] = useState(false);
   const [focusedLineIndex, setFocusedLineIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lyricsRef = useRef(song.lyrics);
+
+  useEffect(() => {
+    lyricsRef.current = song.lyrics;
+  }, [song.lyrics]);
 
   const player = useAudioPlayer(song.audioData || null);
   const { getCurrentTime } = player;
@@ -71,43 +76,48 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   }, [player.currentTime, player.isPlaying, song.lyrics]);
 
   const handleAddLine = useCallback(() => {
-    const newLyrics = [...song.lyrics, createEmptyLine()];
+    const currentLyrics = lyricsRef.current;
+    const newLyrics = [...currentLyrics, createEmptyLine()];
     pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, pushState, onUpdate]);
+  }, [pushState, onUpdate]);
 
   const handleAddPromptLine = useCallback(() => {
+    const currentLyrics = lyricsRef.current;
     const newLine: LyricLineType = {
       ...createEmptyLine(),
       type: 'prompt',
     };
-    const newLyrics = [...song.lyrics, newLine];
+    const newLyrics = [...currentLyrics, newLine];
     pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, pushState, onUpdate]);
+  }, [pushState, onUpdate]);
 
   const handleUpdateLine = useCallback((index: number, updatedLine: LyricLineType) => {
-    const newLyrics = [...song.lyrics];
+    const currentLyrics = lyricsRef.current;
+    const newLyrics = [...currentLyrics];
     newLyrics[index] = updatedLine;
     pushState(newLyrics);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, pushState, onUpdate]);
+  }, [pushState, onUpdate]);
 
   const handleDeleteLine = useCallback((index: number) => {
-    if (song.lyrics.length <= 1) return;
-    const newLyrics = song.lyrics.filter((_, i) => i !== index);
+    const currentLyrics = lyricsRef.current;
+    if (currentLyrics.length <= 1) return;
+    const newLyrics = currentLyrics.filter((_, i) => i !== index);
     pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, pushState, onUpdate]);
+  }, [pushState, onUpdate]);
 
   const handleMarkTimestamp = useCallback((index: number) => {
+    const currentLyrics = lyricsRef.current;
     const currentTime = getCurrentTime();
     const timestamp = formatTime(currentTime);
-    const newLyrics = [...song.lyrics];
+    const newLyrics = [...currentLyrics];
     newLyrics[index] = { ...newLyrics[index], timestamp };
     pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [getCurrentTime, song.lyrics, pushState, onUpdate]);
+  }, [getCurrentTime, pushState, onUpdate]);
 
   const handleFocus = useCallback((index: number) => {
     setFocusedLineIndex(index);
@@ -119,24 +129,25 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
 
   // Smart timestamp: if a line is focused, add timestamp to it; otherwise create new line
   const handleSmartTimestamp = useCallback(() => {
+    const currentLyrics = lyricsRef.current;
     const currentTime = getCurrentTime();
     const timestamp = formatTime(currentTime);
 
-    if (focusedLineIndex !== null && focusedLineIndex < song.lyrics.length) {
-      const line = song.lyrics[focusedLineIndex];
+    if (focusedLineIndex !== null && focusedLineIndex < currentLyrics.length) {
+      const line = currentLyrics[focusedLineIndex];
       if (line.type !== 'prompt') {
-        const newLyrics = [...song.lyrics];
+        const newLyrics = [...currentLyrics];
         newLyrics[focusedLineIndex] = { ...newLyrics[focusedLineIndex], timestamp };
         pushState(newLyrics, true);
         onUpdate({ lyrics: newLyrics });
       }
     } else {
       const newLine = { ...createEmptyLine(), timestamp };
-      const newLyrics = [...song.lyrics, newLine];
+      const newLyrics = [...currentLyrics, newLine];
       pushState(newLyrics, true);
       onUpdate({ lyrics: newLyrics });
     }
-  }, [focusedLineIndex, song.lyrics, getCurrentTime, onUpdate, pushState]);
+  }, [focusedLineIndex, getCurrentTime, onUpdate, pushState]);
 
   // Undo handler
   const handleUndo = useCallback(() => {
@@ -153,16 +164,17 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
 
   // Insert prompt content as prompt lines
   const handleInsertPrompt = useCallback((content: string) => {
+    const currentLyrics = lyricsRef.current;
     const lines = content.split('\n').filter(line => line.trim());
     const newPromptLines: LyricLineType[] = lines.map(text => ({
       ...createEmptyLine(),
       type: 'prompt' as const,
       text,
     }));
-    const newLyrics = [...song.lyrics, ...newPromptLines];
+    const newLyrics = [...currentLyrics, ...newPromptLines];
     pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, onUpdate, pushState]);
+  }, [onUpdate, pushState]);
 
   const handleLoadAudio = () => {
     fileInputRef.current?.click();
