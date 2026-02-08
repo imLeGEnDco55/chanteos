@@ -106,16 +106,18 @@ export function AudioPlayer({
       onTouchStart={preventFocusLoss}
     >
       {/* Swipe handle to toggle rhyme panel */}
-      <div 
-        className="flex justify-center py-1 cursor-pointer"
+      <button
+        type="button"
+        className="w-full flex justify-center py-1 cursor-pointer focus:outline-none focus-visible:bg-primary-foreground/10"
         onClick={onToggleRhymePanel}
+        aria-label={showRhymePanel ? "Ocultar panel de rimas" : "Mostrar panel de rimas"}
       >
         {showRhymePanel ? (
           <ChevronDown className="h-5 w-5 text-primary-foreground/60" />
         ) : (
           <ChevronUp className="h-5 w-5 text-primary-foreground/60" />
         )}
-      </div>
+      </button>
 
       {/* Rhyme suggestions panel */}
       <RhymePanel
@@ -160,6 +162,7 @@ export function AudioPlayer({
           onClick={onOpenPromptLibrary}
           className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20"
           title="Librería de prompts"
+          aria-label="Abrir librería de prompts"
         >
           <Music className="h-5 w-5" />
         </Button>
@@ -175,6 +178,7 @@ export function AudioPlayer({
             canUndo ? "text-primary-foreground" : "text-primary-foreground/30"
           )}
           title="Deshacer"
+          aria-label="Deshacer último cambio"
         >
           <Undo2 className="h-5 w-5" />
         </Button>
@@ -185,6 +189,7 @@ export function AudioPlayer({
           size="icon"
           onClick={onSkipBack}
           className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20 relative"
+          aria-label="Retroceder 3 segundos"
         >
           <RotateCcw className="h-5 w-5" />
           <span className="absolute text-[10px] font-bold">3</span>
@@ -195,6 +200,7 @@ export function AudioPlayer({
           onClick={onTogglePlay}
           size="icon"
           className="h-14 w-14 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mx-2"
+          aria-label={isPlaying ? "Pausar" : "Reproducir"}
         >
           {isPlaying ? (
             <Pause className="h-7 w-7" />
@@ -209,6 +215,7 @@ export function AudioPlayer({
           size="icon"
           onClick={onSkipForward}
           className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20 relative"
+          aria-label="Adelantar 3 segundos"
         >
           <RotateCw className="h-5 w-5" />
           <span className="absolute text-[10px] font-bold">3</span>
@@ -230,6 +237,11 @@ export function AudioPlayer({
             loopState === 'point-a' ? 'Establecer punto B' :
             'Desactivar loop'
           }
+          aria-label={
+            loopState === 'off' ? 'Establecer punto A de bucle' :
+            loopState === 'point-a' ? 'Establecer punto B de bucle' :
+            'Desactivar bucle'
+          }
         >
           <Repeat className="h-5 w-5" />
           {loopState === 'point-a' && (
@@ -247,6 +259,7 @@ export function AudioPlayer({
           onClick={onMarkTimestamp}
           className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20"
           title="Agregar timestamp a la línea actual"
+          aria-label="Insertar marca de tiempo"
         >
           <Hash className="h-5 w-5" />
         </Button>
