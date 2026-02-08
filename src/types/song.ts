@@ -16,10 +16,14 @@ export interface Song {
   updatedAt: number;
 }
 
+export type LoopState = 'off' | 'point-a' | 'loop-ab';
+
 export interface AudioPlayerState {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
   playbackRate: number;
-  isLooping: boolean;
+  loopState: LoopState;
+  loopPointA: number | null;
+  loopPointB: number | null;
 }
