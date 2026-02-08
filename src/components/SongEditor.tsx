@@ -6,14 +6,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LyricLine } from './LyricLine';
 import { PromptLine } from './PromptLine';
 import { AudioPlayer } from './AudioPlayer';
-import { ThemeToggle } from './ThemeToggle';
 import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { usePromptLibrary } from '@/hooks/usePromptLibrary';
 import { useLyricsHistory } from '@/hooks/useLyricsHistory';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime, parseTime } from '@/lib/syllables';
-import type { Song, LyricLine as LyricLineType } from '@/types/song';
+import type { Song, LyricLine as LyricLineType, PromptTemplate } from '@/types/song';
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -27,16 +25,16 @@ interface SongEditorProps {
   song: Song;
   onBack: () => void;
   onUpdate: (updates: Partial<Song>, audioFile?: File) => void;
+  prompts: PromptTemplate[];
 }
 
-export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
+export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps) {
   const [showNotes, setShowNotes] = useState(false);
   const [showPromptLibrary, setShowPromptLibrary] = useState(false);
   const [focusedLineIndex, setFocusedLineIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const player = useAudioPlayer(song.audioData || null);
-  const promptLibrary = usePromptLibrary();
   const lyricsHistory = useLyricsHistory(song.lyrics);
 
   // Reset history when song changes
@@ -204,8 +202,6 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <ThemeToggle />
       </header>
 
       {/* Content */}
@@ -291,15 +287,16 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
         className="hidden"
       />
 
-      {/* Prompt Library Dialog */}
+      {/* Prompt Library Dialog (for inserting only) */}
       <PromptLibraryDialog
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
-        prompts={promptLibrary.prompts}
-        onAddPrompt={promptLibrary.addPrompt}
-        onUpdatePrompt={promptLibrary.updatePrompt}
-        onDeletePrompt={promptLibrary.deletePrompt}
+        prompts={prompts}
+        onAddPrompt={() => {}}
+        onUpdatePrompt={() => {}}
+        onDeletePrompt={() => {}}
         onInsertPrompt={handleInsertPrompt}
+        insertOnly
       />
 
       {/* Audio Player */}

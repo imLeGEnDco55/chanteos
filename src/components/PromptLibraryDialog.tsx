@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 import type { PromptTemplate } from '@/types/song';
 
 interface PromptLibraryDialogProps {
@@ -20,6 +21,7 @@ interface PromptLibraryDialogProps {
   onUpdatePrompt: (id: string, updates: Partial<PromptTemplate>) => void;
   onDeletePrompt: (id: string) => void;
   onInsertPrompt: (content: string) => void;
+  insertOnly?: boolean;
 }
 
 export function PromptLibraryDialog({
@@ -30,6 +32,7 @@ export function PromptLibraryDialog({
   onUpdatePrompt,
   onDeletePrompt,
   onInsertPrompt,
+  insertOnly = false,
 }: PromptLibraryDialogProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
@@ -56,7 +59,7 @@ export function PromptLibraryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Librería de Prompts</DialogTitle>
+          <DialogTitle>{insertOnly ? 'Insertar Prompt' : 'Librería de Prompts'}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh] pr-4">
@@ -66,7 +69,7 @@ export function PromptLibraryDialog({
                 key={prompt.id}
                 className="border border-border rounded-lg p-3 space-y-2"
               >
-                {editingId === prompt.id ? (
+                {!insertOnly && editingId === prompt.id ? (
                   <>
                     <Input
                       value={prompt.name}
@@ -91,8 +94,11 @@ export function PromptLibraryDialog({
                   <>
                     <div className="flex items-center justify-between">
                       <h4 
-                        className="font-medium cursor-pointer hover:text-primary"
-                        onClick={() => setEditingId(prompt.id)}
+                        className={cn(
+                          "font-medium",
+                          !insertOnly && "cursor-pointer hover:text-primary"
+                        )}
+                        onClick={() => !insertOnly && setEditingId(prompt.id)}
                       >
                         {prompt.name}
                       </h4>
@@ -110,19 +116,24 @@ export function PromptLibraryDialog({
                             <Copy className="h-4 w-4" />
                           )}
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDeletePrompt(prompt.id)}
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {!insertOnly && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDeletePrompt(prompt.id)}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     <pre 
-                      className="text-sm text-muted-foreground whitespace-pre-wrap font-mono bg-muted/50 p-2 rounded cursor-pointer hover:bg-muted"
-                      onClick={() => setEditingId(prompt.id)}
+                      className={cn(
+                        "text-sm text-muted-foreground whitespace-pre-wrap font-mono bg-muted/50 p-2 rounded",
+                        !insertOnly && "cursor-pointer hover:bg-muted"
+                      )}
+                      onClick={() => !insertOnly && setEditingId(prompt.id)}
                     >
                       {prompt.content}
                     </pre>
@@ -131,38 +142,46 @@ export function PromptLibraryDialog({
               </div>
             ))}
 
-            {isAdding ? (
-              <div className="border border-dashed border-primary rounded-lg p-3 space-y-2">
-                <Input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Nombre del prompt"
-                  autoFocus
-                />
-                <Textarea
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  placeholder="Contenido del prompt..."
-                  rows={3}
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleAdd}>
-                    Guardar
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>
-                    Cancelar
-                  </Button>
+            {!insertOnly && (
+              isAdding ? (
+                <div className="border border-dashed border-primary rounded-lg p-3 space-y-2">
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Nombre del prompt"
+                    autoFocus
+                  />
+                  <Textarea
+                    value={newContent}
+                    onChange={(e) => setNewContent(e.target.value)}
+                    placeholder="Contenido del prompt..."
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleAdd}>
+                      Guardar
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => setIsAdding(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Nuevo prompt
-              </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => setIsAdding(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Nuevo prompt
+                </Button>
+              )
+            )}
+
+            {prompts.length === 0 && insertOnly && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No hay prompts. Créalos desde Ajustes en la pantalla principal.
+              </p>
             )}
           </div>
         </ScrollArea>
