@@ -8,17 +8,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ThemeToggle } from './ThemeToggle';
-import type { Song } from '@/types/song';
+import { SettingsDialog } from './SettingsDialog';
+import type { Song, PromptTemplate } from '@/types/song';
 
 interface SongListProps {
   songs: Song[];
   onSelectSong: (song: Song) => void;
   onCreateSong: () => void;
   onDeleteSong: (songId: string) => void;
+  prompts: PromptTemplate[];
+  onAddPrompt: (name: string, content: string) => void;
+  onUpdatePrompt: (id: string, updates: Partial<PromptTemplate>) => void;
+  onDeletePrompt: (id: string) => void;
 }
 
-export function SongList({ songs, onSelectSong, onCreateSong, onDeleteSong }: SongListProps) {
+export function SongList({ 
+  songs, 
+  onSelectSong, 
+  onCreateSong, 
+  onDeleteSong,
+  prompts,
+  onAddPrompt,
+  onUpdatePrompt,
+  onDeletePrompt,
+}: SongListProps) {
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -36,7 +49,12 @@ export function SongList({ songs, onSelectSong, onCreateSong, onDeleteSong }: So
             <h1 className="text-xl font-bold">Mis Canciones</h1>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <SettingsDialog
+              prompts={prompts}
+              onAddPrompt={onAddPrompt}
+              onUpdatePrompt={onUpdatePrompt}
+              onDeletePrompt={onDeletePrompt}
+            />
             <Button onClick={onCreateSong} size="icon" className="rounded-full">
               <Plus className="h-5 w-5" />
             </Button>

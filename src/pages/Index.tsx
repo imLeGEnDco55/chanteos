@@ -3,10 +3,12 @@ import { SongList } from '@/components/SongList';
 import { SongEditor } from '@/components/SongEditor';
 import { CreateSongDialog } from '@/components/CreateSongDialog';
 import { useSongs } from '@/hooks/useSongs';
+import { usePromptLibrary } from '@/hooks/usePromptLibrary';
 import type { Song } from '@/types/song';
 
 const Index = () => {
   const { songs, createSong, updateSong, deleteSong, getSong, isLoaded } = useSongs();
+  const { prompts, addPrompt, updatePrompt, deletePrompt, isLoaded: promptsLoaded } = usePromptLibrary();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -38,7 +40,7 @@ const Index = () => {
     }
   };
 
-  if (!isLoaded) {
+  if (!isLoaded || !promptsLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Cargando...</div>
@@ -53,6 +55,7 @@ const Index = () => {
           song={selectedSong}
           onBack={handleBack}
           onUpdate={handleUpdateSong}
+          prompts={prompts}
         />
       ) : (
         <SongList
@@ -60,6 +63,10 @@ const Index = () => {
           onSelectSong={handleSelectSong}
           onCreateSong={() => setShowCreateDialog(true)}
           onDeleteSong={handleDeleteSong}
+          prompts={prompts}
+          onAddPrompt={addPrompt}
+          onUpdatePrompt={updatePrompt}
+          onDeletePrompt={deletePrompt}
         />
       )}
 
