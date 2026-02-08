@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Song, LyricLine } from '@/types/song';
 import { countSyllables } from '@/lib/syllables';
-import { 
-  saveAudioToIndexedDB, 
-  loadAudioFromIndexedDB, 
+import {
+  saveAudioToIndexedDB,
+  loadAudioFromIndexedDB,
   deleteAudioFromIndexedDB,
-  loadAllAudioFromIndexedDB 
+  loadAllAudioFromIndexedDB
 } from '@/lib/audioStorage';
 
 const STORAGE_KEY = 'songwriting-notebook-songs';
@@ -23,7 +23,7 @@ function loadSongsFromStorage(): Song[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return [];
-    
+
     const storedSongs: StoredSong[] = JSON.parse(stored);
     return storedSongs.map(s => ({
       ...s,
@@ -63,10 +63,10 @@ export function useSongs() {
   useEffect(() => {
     async function loadData() {
       const loadedSongs = loadSongsFromStorage();
-      
+
       // Load all audio from IndexedDB
       const audioMap = await loadAllAudioFromIndexedDB();
-      
+
       // Merge audio data with songs
       const songsWithAudio = loadedSongs.map(song => {
         const audioEntry = audioMap.get(song.id);
@@ -80,11 +80,11 @@ export function useSongs() {
         }
         return song;
       });
-      
+
       setSongs(songsWithAudio);
       setIsLoaded(true);
     }
-    
+
     loadData();
   }, []);
 
@@ -117,7 +117,7 @@ export function useSongs() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    
+
     setSongs(prev => [...prev, newSong]);
     return newSong;
   }, []);
@@ -130,9 +130,9 @@ export function useSongs() {
       updates.audioData = blobUrl;
       updates.audioFileName = audioFile.name;
     }
-    
-    setSongs(prev => prev.map(song => 
-      song.id === songId 
+
+    setSongs(prev => prev.map(song =>
+      song.id === songId
         ? { ...song, ...updates, updatedAt: Date.now() }
         : song
     ));
@@ -145,10 +145,10 @@ export function useSongs() {
       URL.revokeObjectURL(cachedUrl);
       audioCache.delete(songId);
     }
-    
+
     // Delete from IndexedDB
     await deleteAudioFromIndexedDB(songId);
-    
+
     setSongs(prev => prev.filter(song => song.id !== songId));
   }, []);
 
@@ -163,12 +163,25 @@ export function useSongs() {
     return song;
   }, [songs]);
 
+  const importSong = useCallback(async (songData: Song): Promise<void> => {
+    // Ensure ID is unique or regenerated during import process (already done in projectFile.ts usually)
+    // But let's just push it to state.
+
+    // Check if audio exists in the song object (as blobUrl) and cache it
+    if (songData.audioData) {
+      audioCache.set(songData.id, songData.audioData);
+    }
+
+    setSongs(prev => [songData, ...prev]);
+  }, []);
+
   return {
     songs,
     isLoaded,
     createSong,
     updateSong,
     deleteSong,
+    importSong,
     getSong,
   };
 }

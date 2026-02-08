@@ -1,4 +1,7 @@
-import { Music, Plus, Trash2, MoreVertical } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { importProjectFromChnt } from '@/lib/projectFile';
+import { Music, Plus, Trash2, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,22 +19,47 @@ interface SongListProps {
   onSelectSong: (song: Song) => void;
   onCreateSong: () => void;
   onDeleteSong: (songId: string) => void;
+  onImportSong: (song: Song) => void;
   prompts: PromptTemplate[];
   onAddPrompt: (name: string, content: string) => void;
   onUpdatePrompt: (id: string, updates: Partial<PromptTemplate>) => void;
   onDeletePrompt: (id: string) => void;
 }
 
-export function SongList({ 
-  songs, 
-  onSelectSong, 
-  onCreateSong, 
+export function SongList({
+  songs,
+  onSelectSong,
+  onCreateSong,
   onDeleteSong,
+  onImportSong,
   prompts,
   onAddPrompt,
   onUpdatePrompt,
   onDeletePrompt,
 }: SongListProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const importedSong = await importProjectFromChnt(file);
+      onImportSong(importedSong);
+      toast.success('Proyecto importado correctamente');
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Error al importar el archivo .CHNT');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -49,6 +77,23 @@ export function SongList({
             <h1 className="text-xl font-bold">Mis Canciones</h1>
           </div>
           <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".chnt"
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              title="Importar Proyecto (.CHNT)"
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
             <SettingsDialog
               prompts={prompts}
               onAddPrompt={onAddPrompt}
@@ -102,7 +147,7 @@ export function SongList({
                         {formatDate(song.updatedAt)}
                       </p>
                     </div>
-                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8">

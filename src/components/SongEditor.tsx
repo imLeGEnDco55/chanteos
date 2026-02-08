@@ -12,6 +12,8 @@ import { useLyricsHistory } from '@/hooks/useLyricsHistory';
 import { useRhymeSuggestions } from '@/hooks/useRhymeSuggestions';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime, parseTime } from '@/lib/syllables';
+import { exportProjectAsChnt, exportLyricsAsTxt } from '@/lib/projectFile';
+import { toast } from 'sonner';
 import type { Song, LyricLine as LyricLineType, PromptTemplate } from '@/types/song';
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -45,8 +47,6 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const { getCurrentTime } = player;
 
   const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(song.lyrics);
-  // We keep lyricsHistory primarily for access pass-through if needed, but we should destructure
-  // what we need to avoid using the whole object in deps.
 
   const rhymeSuggestions = useRhymeSuggestions();
   const { fetchSuggestions } = rhymeSuggestions;
@@ -240,6 +240,12 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => exportProjectAsChnt(song)}>
+              Exportar Proyecto (.CHNT)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportLyricsAsTxt(song)}>
+              Exportar Letra (.TXT)
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowNotes(!showNotes)}>
               {showNotes ? 'Ver letras' : 'Ver notas'}
             </DropdownMenuItem>

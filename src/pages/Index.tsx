@@ -7,7 +7,7 @@ import { usePromptLibrary } from '@/hooks/usePromptLibrary';
 import type { Song } from '@/types/song';
 
 const Index = () => {
-  const { songs, createSong, updateSong, deleteSong, getSong, isLoaded } = useSongs();
+  const { songs, createSong, updateSong, deleteSong, importSong, getSong, isLoaded } = useSongs();
   const { prompts, addPrompt, updatePrompt, deletePrompt, isLoaded: promptsLoaded } = usePromptLibrary();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -40,6 +40,12 @@ const Index = () => {
     }
   };
 
+  const handleImportSong = async (song: Song) => {
+    await importSong(song);
+    // Optional: auto-select imported song?
+    // setSelectedSongId(song.id); 
+  };
+
   if (!isLoaded || !promptsLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -63,6 +69,7 @@ const Index = () => {
           onSelectSong={handleSelectSong}
           onCreateSong={() => setShowCreateDialog(true)}
           onDeleteSong={handleDeleteSong}
+          onImportSong={handleImportSong}
           prompts={prompts}
           onAddPrompt={addPrompt}
           onUpdatePrompt={updatePrompt}
