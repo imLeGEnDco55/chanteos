@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
       manifest: {
-        name: "Songwriting Notebook",
-        short_name: "Songwriting",
+        name: "CHaNTeOS",
+        short_name: "CHaNTeOS",
         description: "Cuaderno de composición musical con reproductor de audio y editor de letras",
         theme_color: "#e97520",
         background_color: "#1a1a1a",
