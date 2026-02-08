@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Moon, Sun, Key } from 'lucide-react';
+import { Settings, Plus, Trash2, Moon, Sun, Key, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,18 @@ export function SettingsDialog({
   const handleSaveKey = () => {
     localStorage.setItem('gemini_api_key', apiKey);
     toast.success('API Key guardada correctamente');
+  };
+
+  const handleExportPrompts = () => {
+    const dataStr = JSON.stringify(prompts, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = 'prompt-library.json';
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   };
 
   const handleAdd = () => {
@@ -139,12 +151,20 @@ export function SettingsDialog({
 
             {/* Prompt Library Section */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Librería de Prompts (Suno)
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Plantillas reutilizables para insertar en tus canciones
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Librería de Prompts (Suno)
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Plantillas reutilizables para insertar en tus canciones
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleExportPrompts} title="Exportar librería">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar
+                </Button>
+              </div>
 
               <div className="space-y-3">
                 {prompts.map((prompt) => (
