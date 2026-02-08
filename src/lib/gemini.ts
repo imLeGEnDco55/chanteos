@@ -14,8 +14,8 @@ export const generateRhymes = async (word: string, apiKey: string): Promise<Rhym
     Generate a JSON object with Spanish rhymes and related words for the word "${word}".
     The output must receive this schema:
     {
-      "rhymes": ["string"], // 5-6 rhyming words in Spanish
-      "related": ["string"] // 3-4 synonyms, related concepts or contextually relevant words
+      "rhymes": ["string"], // 4-5 rhyming words in Spanish
+      "related": ["string"] // 4-5 synonyms, related concepts or contextually relevant words
     }
     Strictly return JSON only. No markdown formatting.
   `;

@@ -51,10 +51,10 @@ export const LyricLine = memo(function LyricLine({
   // Detect text selection and extract the selected word
   const handleSelect = useCallback(() => {
     if (!inputRef.current || !onWordSelect) return;
-    
+
     const start = inputRef.current.selectionStart || 0;
     const end = inputRef.current.selectionEnd || 0;
-    
+
     if (start !== end) {
       // There's a selection - extract the selected text
       const selectedText = line.text.substring(start, end).trim();
@@ -66,7 +66,7 @@ export const LyricLine = memo(function LyricLine({
       const text = line.text;
       let wordStart = start;
       let wordEnd = start;
-      
+
       // Find word boundaries
       while (wordStart > 0 && /[\wáéíóúüñ]/i.test(text[wordStart - 1])) {
         wordStart--;
@@ -74,7 +74,7 @@ export const LyricLine = memo(function LyricLine({
       while (wordEnd < text.length && /[\wáéíóúüñ]/i.test(text[wordEnd])) {
         wordEnd++;
       }
-      
+
       if (wordEnd > wordStart) {
         const word = text.substring(wordStart, wordEnd).trim();
         if (word.length > 0) {
@@ -93,7 +93,7 @@ export const LyricLine = memo(function LyricLine({
   }, [handleSelect]);
 
   return (
-    <div 
+    <div
       className={cn(
         "flex items-center gap-2 py-2 px-3 transition-colors",
         isFocused && "bg-accent/30",
@@ -131,7 +131,6 @@ export const LyricLine = memo(function LyricLine({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onDoubleClick={handleDoubleClick}
-        onSelect={handleSelect}
         placeholder="Escribe aquí..."
         className={cn(
           "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
@@ -147,7 +146,7 @@ export const LyricLine = memo(function LyricLine({
         )}>
           {line.syllableCount}
         </span>
-        
+
         {canDelete && (
           <Button
             variant="ghost"
