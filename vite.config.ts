@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  base: "/chanteos/",
   plugins: [
     react(),
     mode === "development" && componentTagger(),
