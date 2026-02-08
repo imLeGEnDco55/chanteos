@@ -27,7 +27,7 @@ export const PromptLine = memo(function PromptLine({
   };
 
   return (
-    <div 
+    <div
       className={cn(
         "flex items-center gap-2 py-2 px-3 transition-colors bg-accent/20 border-l-2 border-accent",
         isFocused && "bg-accent/40"
@@ -47,7 +47,7 @@ export const PromptLine = memo(function PromptLine({
         onBlur={() => setIsFocused(false)}
         placeholder="[Verse], [Chorus], instrucciones..."
         className={cn(
-          "flex-1 h-auto py-1 bg-transparent border-none focus-visible:ring-1 italic text-accent"
+          "flex-1 h-auto py-1 bg-transparent border-none focus-visible:ring-1 italic text-accent text-center"
         )}
       />
 
