@@ -1,8 +1,18 @@
+export type LineType = 'lyric' | 'prompt';
+
 export interface LyricLine {
   id: string;
+  type?: LineType; // Default is 'lyric'
   timestamp: string; // Format: "0:00" or "1:23"
   text: string;
   syllableCount: number;
+}
+
+export interface PromptTemplate {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: number;
 }
 
 export interface Song {
@@ -26,4 +36,10 @@ export interface AudioPlayerState {
   loopState: LoopState;
   loopPointA: number | null;
   loopPointB: number | null;
+}
+
+// History for undo functionality
+export interface LyricsHistoryEntry {
+  lyrics: LyricLine[];
+  timestamp: number;
 }

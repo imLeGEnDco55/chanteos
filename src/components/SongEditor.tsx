@@ -1,16 +1,20 @@
-import { Plus, ChevronLeft, MoreVertical } from 'lucide-react';
+import { Plus, ChevronLeft, MoreVertical, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LyricLine } from './LyricLine';
+import { PromptLine } from './PromptLine';
 import { AudioPlayer } from './AudioPlayer';
 import { ThemeToggle } from './ThemeToggle';
+import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePromptLibrary } from '@/hooks/usePromptLibrary';
+import { useLyricsHistory } from '@/hooks/useLyricsHistory';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime, parseTime } from '@/lib/syllables';
 import type { Song, LyricLine as LyricLineType } from '@/types/song';
-import { useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -27,20 +31,27 @@ interface SongEditorProps {
 
 export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
   const [showNotes, setShowNotes] = useState(false);
+  const [showPromptLibrary, setShowPromptLibrary] = useState(false);
   const [focusedLineIndex, setFocusedLineIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const player = useAudioPlayer(song.audioData || null);
+  const promptLibrary = usePromptLibrary();
+  const lyricsHistory = useLyricsHistory(song.lyrics);
+
+  // Reset history when song changes
+  useEffect(() => {
+    lyricsHistory.resetHistory(song.lyrics);
+  }, [song.id]);
 
   // Find the active line based on current playback time
   const activeLineIndex = useMemo(() => {
     if (!player.isPlaying && player.currentTime === 0) return -1;
     
-    // Find the last line whose timestamp is <= current time
     let activeIndex = -1;
     for (let i = 0; i < song.lyrics.length; i++) {
       const line = song.lyrics[i];
-      if (line.timestamp) {
+      if (line.type !== 'prompt' && line.timestamp) {
         const lineTime = parseTime(line.timestamp);
         if (lineTime <= player.currentTime) {
           activeIndex = i;
@@ -54,18 +65,31 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
 
   const handleAddLine = () => {
     const newLyrics = [...song.lyrics, createEmptyLine()];
+    lyricsHistory.pushState(newLyrics, true);
+    onUpdate({ lyrics: newLyrics });
+  };
+
+  const handleAddPromptLine = () => {
+    const newLine: LyricLineType = {
+      ...createEmptyLine(),
+      type: 'prompt',
+    };
+    const newLyrics = [...song.lyrics, newLine];
+    lyricsHistory.pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
   };
 
   const handleUpdateLine = (index: number, updatedLine: LyricLineType) => {
     const newLyrics = [...song.lyrics];
     newLyrics[index] = updatedLine;
+    lyricsHistory.pushState(newLyrics);
     onUpdate({ lyrics: newLyrics });
   };
 
   const handleDeleteLine = (index: number) => {
     if (song.lyrics.length <= 1) return;
     const newLyrics = song.lyrics.filter((_, i) => i !== index);
+    lyricsHistory.pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
   };
 
@@ -74,6 +98,7 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
     const timestamp = formatTime(currentTime);
     const newLyrics = [...song.lyrics];
     newLyrics[index] = { ...newLyrics[index], timestamp };
+    lyricsHistory.pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
   };
 
@@ -83,17 +108,46 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
     const timestamp = formatTime(currentTime);
     
     if (focusedLineIndex !== null && focusedLineIndex < song.lyrics.length) {
-      // Add timestamp to focused line
-      const newLyrics = [...song.lyrics];
-      newLyrics[focusedLineIndex] = { ...newLyrics[focusedLineIndex], timestamp };
-      onUpdate({ lyrics: newLyrics });
+      const line = song.lyrics[focusedLineIndex];
+      if (line.type !== 'prompt') {
+        const newLyrics = [...song.lyrics];
+        newLyrics[focusedLineIndex] = { ...newLyrics[focusedLineIndex], timestamp };
+        lyricsHistory.pushState(newLyrics, true);
+        onUpdate({ lyrics: newLyrics });
+      }
     } else {
-      // Create new line with timestamp
       const newLine = { ...createEmptyLine(), timestamp };
       const newLyrics = [...song.lyrics, newLine];
+      lyricsHistory.pushState(newLyrics, true);
       onUpdate({ lyrics: newLyrics });
     }
-  }, [focusedLineIndex, song.lyrics, player, onUpdate]);
+  }, [focusedLineIndex, song.lyrics, player, onUpdate, lyricsHistory]);
+
+  // Undo handler
+  const handleUndo = useCallback(() => {
+    const previousState = lyricsHistory.undo();
+    if (previousState) {
+      onUpdate({ lyrics: previousState });
+    }
+  }, [lyricsHistory, onUpdate]);
+
+  // Open prompt library
+  const handleOpenPromptLibrary = useCallback(() => {
+    setShowPromptLibrary(true);
+  }, []);
+
+  // Insert prompt content as prompt lines
+  const handleInsertPrompt = useCallback((content: string) => {
+    const lines = content.split('\n').filter(line => line.trim());
+    const newPromptLines: LyricLineType[] = lines.map(text => ({
+      ...createEmptyLine(),
+      type: 'prompt' as const,
+      text,
+    }));
+    const newLyrics = [...song.lyrics, ...newPromptLines];
+    lyricsHistory.pushState(newLyrics, true);
+    onUpdate({ lyrics: newLyrics });
+  }, [song.lyrics, onUpdate, lyricsHistory]);
 
   const handleLoadAudio = () => {
     fileInputRef.current?.click();
@@ -105,8 +159,12 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
     onUpdate({}, file);
   };
 
-  // Total syllables
-  const totalSyllables = song.lyrics.reduce((sum, line) => sum + line.syllableCount, 0);
+  // Total syllables (only count lyric lines)
+  const totalSyllables = song.lyrics
+    .filter(line => line.type !== 'prompt')
+    .reduce((sum, line) => sum + line.syllableCount, 0);
+
+  const lyricLineCount = song.lyrics.filter(line => line.type !== 'prompt').length;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -169,35 +227,54 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
                 key={line.id}
                 className={cn(
                   "transition-colors duration-200",
-                  activeLineIndex === index && "bg-primary/10"
+                  line.type !== 'prompt' && activeLineIndex === index && "bg-primary/10"
                 )}
               >
-                <LyricLine
-                  line={line}
-                  onUpdate={(updated) => handleUpdateLine(index, updated)}
-                  onDelete={() => handleDeleteLine(index)}
-                  onMarkTimestamp={() => handleMarkTimestamp(index)}
-                  onFocus={() => setFocusedLineIndex(index)}
-                  onBlur={() => setFocusedLineIndex(null)}
-                  canDelete={song.lyrics.length > 1}
-                  isActive={activeLineIndex === index}
-                />
+                {line.type === 'prompt' ? (
+                  <PromptLine
+                    line={line}
+                    onUpdate={(updated) => handleUpdateLine(index, updated)}
+                    onDelete={() => handleDeleteLine(index)}
+                    canDelete={song.lyrics.length > 1}
+                  />
+                ) : (
+                  <LyricLine
+                    line={line}
+                    onUpdate={(updated) => handleUpdateLine(index, updated)}
+                    onDelete={() => handleDeleteLine(index)}
+                    onMarkTimestamp={() => handleMarkTimestamp(index)}
+                    onFocus={() => setFocusedLineIndex(index)}
+                    onBlur={() => setFocusedLineIndex(null)}
+                    canDelete={song.lyrics.length > 1}
+                    isActive={activeLineIndex === index}
+                  />
+                )}
               </div>
             ))}
 
-            {/* Add line button */}
-            <Button
-              variant="ghost"
-              onClick={handleAddLine}
-              className="w-full mt-2 gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Plus className="h-4 w-4" />
-              Agregar línea
-            </Button>
+            {/* Add line buttons */}
+            <div className="flex gap-2 px-3 mt-2">
+              <Button
+                variant="ghost"
+                onClick={handleAddLine}
+                className="flex-1 gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="h-4 w-4" />
+                Línea
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleAddPromptLine}
+                className="flex-1 gap-2 text-accent hover:text-accent/80"
+              >
+                <FileText className="h-4 w-4" />
+                Prompt
+              </Button>
+            </div>
 
             {/* Stats */}
             <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-              <span>{song.lyrics.length} líneas</span>
+              <span>{lyricLineCount} líneas</span>
               <span>•</span>
               <span>{totalSyllables} sílabas</span>
             </div>
@@ -212,6 +289,17 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
         accept="audio/*"
         onChange={handleFileChange}
         className="hidden"
+      />
+
+      {/* Prompt Library Dialog */}
+      <PromptLibraryDialog
+        open={showPromptLibrary}
+        onOpenChange={setShowPromptLibrary}
+        prompts={promptLibrary.prompts}
+        onAddPrompt={promptLibrary.addPrompt}
+        onUpdatePrompt={promptLibrary.updatePrompt}
+        onDeletePrompt={promptLibrary.deletePrompt}
+        onInsertPrompt={handleInsertPrompt}
       />
 
       {/* Audio Player */}
@@ -233,6 +321,9 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
         onSkipBack={player.skipBack}
         onSkipForward={player.skipForward}
         onMarkTimestamp={handleSmartTimestamp}
+        onOpenPromptLibrary={handleOpenPromptLibrary}
+        onUndo={handleUndo}
+        canUndo={lyricsHistory.canUndo}
       />
     </div>
   );

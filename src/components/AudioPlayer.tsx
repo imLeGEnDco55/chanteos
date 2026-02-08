@@ -24,6 +24,9 @@ interface AudioPlayerProps {
   onSkipBack?: () => void;
   onSkipForward?: () => void;
   onMarkTimestamp?: () => void;
+  onOpenPromptLibrary?: () => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
 }
 
 export function AudioPlayer({
@@ -44,6 +47,9 @@ export function AudioPlayer({
   onSkipBack,
   onSkipForward,
   onMarkTimestamp,
+  onOpenPromptLibrary,
+  onUndo,
+  canUndo = false,
 }: AudioPlayerProps) {
   const keyboardHeight = useKeyboardHeight();
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -105,24 +111,30 @@ export function AudioPlayer({
       
       {/* Controls - matching mockup layout */}
       <div className="flex items-center justify-center gap-2 px-4 py-3">
-        {/* Prompts placeholder - future feature */}
+        {/* Prompt Library button */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20 opacity-50"
-          disabled
+          onClick={onOpenPromptLibrary}
+          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20"
+          title="Librería de prompts"
         >
-          <Undo2 className="h-5 w-5" />
+          <Music className="h-5 w-5" />
         </Button>
 
-        {/* Undo placeholder - future feature */}
+        {/* Undo button */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20 opacity-50"
-          disabled
+          onClick={onUndo}
+          disabled={!canUndo}
+          className={cn(
+            "h-10 w-10 hover:bg-primary-foreground/20",
+            canUndo ? "text-primary-foreground" : "text-primary-foreground/30"
+          )}
+          title="Deshacer"
         >
-          <RotateCcw className="h-5 w-5" />
+          <Undo2 className="h-5 w-5" />
         </Button>
 
         {/* Skip back 3s */}
