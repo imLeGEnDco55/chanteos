@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,9 @@ export function SettingsDialog({
       <DialogContent className="max-w-md max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Ajustes</DialogTitle>
+          <DialogDescription>
+            Configura tus preferencias y claves API.
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh] pr-4">
