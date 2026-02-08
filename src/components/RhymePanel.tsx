@@ -53,7 +53,7 @@ export function RhymePanel({
       {selectedWord && !isLoading && (rhymes.length > 0 || related.length > 0) && (
         <>
           {/* Rhymes row */}
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center justify-center">
             {rhymes.map((word, index) => (
               <Button
                 key={`rhyme-${index}`}
@@ -68,7 +68,7 @@ export function RhymePanel({
           </div>
 
           {/* Related words row */}
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center justify-center">
             {related.map((word, index) => (
               <Button
                 key={`related-${index}`}
@@ -80,13 +80,13 @@ export function RhymePanel({
                 {word}
               </Button>
             ))}
-            
+
             {/* Retry button */}
             <Button
               variant="secondary"
               size="sm"
               onClick={onRetry}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-0 px-3 py-1 h-auto ml-auto"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-0 px-3 py-1 h-auto"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
