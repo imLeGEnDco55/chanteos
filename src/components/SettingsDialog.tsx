@@ -289,6 +289,24 @@ export function SettingsDialog({
                 )}
               </div>
             </div>
+
+            {/* Footer Credits */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <div className="text-center space-y-1.5">
+                <p className="text-xs text-muted-foreground font-mono">
+                  Desarrollado por: <span className="text-primary">Sonnet 4.5</span>, <span className="text-primary">Opus 4.5</span>, <span className="text-primary">Gemini 3 PRO</span>, <span className="text-primary">Gemini 3 Flash</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Vibecodeado por: <span className="font-semibold text-foreground">@elWaiele</span>
+                </p>
+                <p className="text-xs text-muted-foreground font-mono">
+                  2026 | <span className="text-primary">imLeGEnDco.</span> × <span className="text-primary">+FlowCode</span>
+                </p>
+                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+                  Hecho con ❤️ en: <span className="font-semibold">Lovable</span> & <span className="font-semibold">Antigravity</span>
+                </p>
+              </div>
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
