@@ -11,71 +11,109 @@ export function useLyricsHistory(initialLyrics: LyricLine[]) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const lastPushTime = useRef<number>(0);
 
+  // Refs to access current state inside stable callbacks without dependencies
+  const historyRef = useRef(history);
+  const currentIndexRef = useRef(currentIndex);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
   // Push a new state to history (debounced to group rapid changes)
   const pushState = useCallback((lyrics: LyricLine[], forceNew = false) => {
     const now = Date.now();
     const timeSinceLastPush = now - lastPushTime.current;
+    
+    // Use refs to get current values
+    const currentHistory = historyRef.current;
+    const idx = currentIndexRef.current;
 
-    setHistory(prev => {
-      // If within debounce window and not forced, update the current entry
-      if (!forceNew && timeSinceLastPush < DEBOUNCE_MS && prev.length > 0) {
+    // Check if within debounce window and not forced
+    if (!forceNew && timeSinceLastPush < DEBOUNCE_MS && currentHistory.length > 0) {
+      setHistory(prev => {
         const updated = [...prev];
-        updated[currentIndex] = { lyrics, timestamp: now };
-        return updated;
-      }
+        // We use functional update to be safe, but logic relies on ref values for decisions
+        // that don't need to re-run the callback itself.
+        // Wait, if we use setHistory(prev => ...), we don't need historyRef for the *update* logic
+        // but we might need it for *deciding* whether to update or splice.
+        // Actually, let's just use the ref values for the logic calculation to keep it simple and consistent.
+        
+        // Re-calculating based on ref values:
+        const newHistoryWithUpdate = [...currentHistory];
+        newHistoryWithUpdate[idx] = { lyrics, timestamp: now };
+        return newHistoryWithUpdate;
+      });
+      return; 
+    }
 
-      // Otherwise, create a new entry
-      // Remove any future history if we've undone and are now making changes
-      const newHistory = prev.slice(0, currentIndex + 1);
-      
-      // Add new entry
-      newHistory.push({ lyrics, timestamp: now });
-      
-      // Limit history size
-      if (newHistory.length > MAX_HISTORY_SIZE) {
-        newHistory.shift();
-        return newHistory;
-      }
-      
-      return newHistory;
-    });
-
-    // Update index only if we're creating a new entry
-    if (forceNew || timeSinceLastPush >= DEBOUNCE_MS) {
-      setCurrentIndex(prev => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
+    // Otherwise, create a new entry
+    // Remove any future history if we've undone and are now making changes
+    const truncatedHistory = currentHistory.slice(0, idx + 1);
+    
+    // Add new entry
+    truncatedHistory.push({ lyrics, timestamp: now });
+    
+    // Limit history size
+    if (truncatedHistory.length > MAX_HISTORY_SIZE) {
+      truncatedHistory.shift();
     }
     
+    setHistory(truncatedHistory);
+    
+    // Update index to point to the new latest entry
+    // If we shifted, the index stays at length-1 (which is consistent)
+    // If we didn't shift, it increments.
+    // Actually, if we shifted, the length stays at MAX_HISTORY_SIZE.
+    // The new index should be newHistory.length - 1.
+    setCurrentIndex(truncatedHistory.length - 1);
+    
     lastPushTime.current = now;
-  }, [currentIndex]);
+  }, []); // Stable callback!
 
   // Undo: go back one step
   const undo = useCallback((): LyricLine[] | null => {
-    if (currentIndex <= 0) return null;
+    const idx = currentIndexRef.current;
+    const hist = historyRef.current;
     
-    const newIndex = currentIndex - 1;
+    if (idx <= 0) return null;
+    
+    const newIndex = idx - 1;
     setCurrentIndex(newIndex);
-    return history[newIndex]?.lyrics || null;
-  }, [currentIndex, history]);
+    return hist[newIndex]?.lyrics || null;
+  }, []); // Stable callback!
 
   // Redo: go forward one step
   const redo = useCallback((): LyricLine[] | null => {
-    if (currentIndex >= history.length - 1) return null;
+    const idx = currentIndexRef.current;
+    const hist = historyRef.current;
     
-    const newIndex = currentIndex + 1;
+    if (idx >= hist.length - 1) return null;
+    
+    const newIndex = idx + 1;
     setCurrentIndex(newIndex);
-    return history[newIndex]?.lyrics || null;
-  }, [currentIndex, history]);
-
-  // Check if we can undo/redo
-  const canUndo = currentIndex > 0;
-  const canRedo = currentIndex < history.length - 1;
+    return hist[newIndex]?.lyrics || null;
+  }, []); // Stable callback!
 
   // Reset history with new initial state
   const resetHistory = useCallback((lyrics: LyricLine[]) => {
-    setHistory([{ lyrics, timestamp: Date.now() }]);
+    const newHistory = [{ lyrics, timestamp: Date.now() }];
+    setHistory(newHistory);
     setCurrentIndex(0);
     lastPushTime.current = 0;
-  }, []);
+    
+    // Update refs immediately to prevent race conditions if called in rapid succession
+    historyRef.current = newHistory;
+    currentIndexRef.current = 0;
+  }, []); // Stable callback!
+
+  // Check if we can undo/redo (derived from state for rendering)
+  const canUndo = currentIndex > 0;
+  const canRedo = currentIndex < history.length - 1;
 
   return {
     pushState,

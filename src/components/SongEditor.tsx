@@ -35,23 +35,26 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const [showRhymePanel, setShowRhymePanel] = useState(false);
   const [focusedLineIndex, setFocusedLineIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const player = useAudioPlayer(song.audioData || null);
   const { getCurrentTime } = player;
 
-  const lyricsHistory = useLyricsHistory(song.lyrics);
+  const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(song.lyrics);
+  // We keep lyricsHistory primarily for access pass-through if needed, but we should destructure
+  // what we need to avoid using the whole object in deps.
+
   const rhymeSuggestions = useRhymeSuggestions();
   const { fetchSuggestions } = rhymeSuggestions;
 
   // Reset history when song changes
   useEffect(() => {
-    lyricsHistory.resetHistory(song.lyrics);
-  }, [song.id]);
+    resetHistory(song.lyrics);
+  }, [song.id, resetHistory]);
 
   // Find the active line based on current playback time
   const activeLineIndex = useMemo(() => {
     if (!player.isPlaying && player.currentTime === 0) return -1;
-    
+
     let activeIndex = -1;
     for (let i = 0; i < song.lyrics.length; i++) {
       const line = song.lyrics[i];
@@ -67,44 +70,44 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     return activeIndex;
   }, [player.currentTime, player.isPlaying, song.lyrics]);
 
-  const handleAddLine = () => {
+  const handleAddLine = useCallback(() => {
     const newLyrics = [...song.lyrics, createEmptyLine()];
-    lyricsHistory.pushState(newLyrics, true);
+    pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  };
+  }, [song.lyrics, pushState, onUpdate]);
 
-  const handleAddPromptLine = () => {
+  const handleAddPromptLine = useCallback(() => {
     const newLine: LyricLineType = {
       ...createEmptyLine(),
       type: 'prompt',
     };
     const newLyrics = [...song.lyrics, newLine];
-    lyricsHistory.pushState(newLyrics, true);
+    pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  };
+  }, [song.lyrics, pushState, onUpdate]);
 
   const handleUpdateLine = useCallback((index: number, updatedLine: LyricLineType) => {
     const newLyrics = [...song.lyrics];
     newLyrics[index] = updatedLine;
-    lyricsHistory.pushState(newLyrics);
+    pushState(newLyrics);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, lyricsHistory, onUpdate]);
+  }, [song.lyrics, pushState, onUpdate]);
 
   const handleDeleteLine = useCallback((index: number) => {
     if (song.lyrics.length <= 1) return;
     const newLyrics = song.lyrics.filter((_, i) => i !== index);
-    lyricsHistory.pushState(newLyrics, true);
+    pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, lyricsHistory, onUpdate]);
+  }, [song.lyrics, pushState, onUpdate]);
 
   const handleMarkTimestamp = useCallback((index: number) => {
     const currentTime = getCurrentTime();
     const timestamp = formatTime(currentTime);
     const newLyrics = [...song.lyrics];
     newLyrics[index] = { ...newLyrics[index], timestamp };
-    lyricsHistory.pushState(newLyrics, true);
+    pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [getCurrentTime, song.lyrics, lyricsHistory, onUpdate]);
+  }, [getCurrentTime, song.lyrics, pushState, onUpdate]);
 
   const handleFocus = useCallback((index: number) => {
     setFocusedLineIndex(index);
@@ -118,30 +121,30 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const handleSmartTimestamp = useCallback(() => {
     const currentTime = getCurrentTime();
     const timestamp = formatTime(currentTime);
-    
+
     if (focusedLineIndex !== null && focusedLineIndex < song.lyrics.length) {
       const line = song.lyrics[focusedLineIndex];
       if (line.type !== 'prompt') {
         const newLyrics = [...song.lyrics];
         newLyrics[focusedLineIndex] = { ...newLyrics[focusedLineIndex], timestamp };
-        lyricsHistory.pushState(newLyrics, true);
+        pushState(newLyrics, true);
         onUpdate({ lyrics: newLyrics });
       }
     } else {
       const newLine = { ...createEmptyLine(), timestamp };
       const newLyrics = [...song.lyrics, newLine];
-      lyricsHistory.pushState(newLyrics, true);
+      pushState(newLyrics, true);
       onUpdate({ lyrics: newLyrics });
     }
-  }, [focusedLineIndex, song.lyrics, getCurrentTime, onUpdate, lyricsHistory]);
+  }, [focusedLineIndex, song.lyrics, getCurrentTime, onUpdate, pushState]);
 
   // Undo handler
   const handleUndo = useCallback(() => {
-    const previousState = lyricsHistory.undo();
+    const previousState = undo();
     if (previousState) {
       onUpdate({ lyrics: previousState });
     }
-  }, [lyricsHistory, onUpdate]);
+  }, [undo, onUpdate]);
 
   // Open prompt library
   const handleOpenPromptLibrary = useCallback(() => {
@@ -157,9 +160,9 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       text,
     }));
     const newLyrics = [...song.lyrics, ...newPromptLines];
-    lyricsHistory.pushState(newLyrics, true);
+    pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  }, [song.lyrics, onUpdate, lyricsHistory]);
+  }, [song.lyrics, onUpdate, pushState]);
 
   const handleLoadAudio = () => {
     fileInputRef.current?.click();
@@ -202,7 +205,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        
+
         <div className="flex-1 min-w-0">
           <Input
             type="text"
@@ -326,9 +329,9 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => {}}
-        onUpdatePrompt={() => {}}
-        onDeletePrompt={() => {}}
+        onAddPrompt={() => { }}
+        onUpdatePrompt={() => { }}
+        onDeletePrompt={() => { }}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />
@@ -354,7 +357,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         onMarkTimestamp={handleSmartTimestamp}
         onOpenPromptLibrary={handleOpenPromptLibrary}
         onUndo={handleUndo}
-        canUndo={lyricsHistory.canUndo}
+        canUndo={canUndo}
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
