@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
         name: "Songwriting Notebook",
         short_name: "Songwriting",
         description: "Cuaderno de composición musical con reproductor de audio y editor de letras",
-        theme_color: "#7c3aed",
+        theme_color: "#e97520",
         background_color: "#1a1a1a",
         display: "standalone",
         orientation: "portrait",
