@@ -218,16 +218,16 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col items-center">
           <Input
             type="text"
             value={song.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            className="text-lg font-bold bg-transparent border-none focus-visible:ring-1 px-0"
+            className="text-lg font-bold bg-transparent border-none focus-visible:ring-1 px-0 text-center"
             placeholder="Título de la canción"
           />
           {song.audioFileName && (
-            <p className="text-xs text-accent font-medium uppercase tracking-wide truncate">
+            <p className="text-xs text-accent font-medium uppercase tracking-wide truncate text-center">
               {song.audioFileName.replace(/\.[^/.]+$/, '')}
             </p>
           )}
