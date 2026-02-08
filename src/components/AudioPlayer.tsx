@@ -1,25 +1,29 @@
-import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, MessageSquare } from 'lucide-react';
+import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { formatTime } from '@/lib/syllables';
 import { cn } from '@/lib/utils';
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
+import type { LoopState } from '@/types/song';
 
 interface AudioPlayerProps {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
   playbackRate: number;
-  isLooping: boolean;
+  loopState: LoopState;
+  loopPointA: number | null;
+  loopPointB: number | null;
   hasAudio: boolean;
   audioFileName?: string;
   onTogglePlay: () => void;
   onSeek: (time: number) => void;
   onCyclePlaybackRate: () => void;
-  onToggleLoop: () => void;
+  onCycleLoopState: () => void;
   onLoadAudio: () => void;
   onSkipBack?: () => void;
   onSkipForward?: () => void;
+  onMarkTimestamp?: () => void;
 }
 
 export function AudioPlayer({
@@ -27,16 +31,19 @@ export function AudioPlayer({
   currentTime,
   duration,
   playbackRate,
-  isLooping,
+  loopState,
+  loopPointA,
+  loopPointB,
   hasAudio,
   audioFileName,
   onTogglePlay,
   onSeek,
   onCyclePlaybackRate,
-  onToggleLoop,
+  onCycleLoopState,
   onLoadAudio,
   onSkipBack,
   onSkipForward,
+  onMarkTimestamp,
 }: AudioPlayerProps) {
   const keyboardHeight = useKeyboardHeight();
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -98,21 +105,22 @@ export function AudioPlayer({
       
       {/* Controls - matching mockup layout */}
       <div className="flex items-center justify-center gap-2 px-4 py-3">
-        {/* Lyrics/subtitle toggle */}
+        {/* Prompts placeholder - future feature */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20"
+          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20 opacity-50"
+          disabled
         >
-          <MessageSquare className="h-5 w-5" />
+          <Undo2 className="h-5 w-5" />
         </Button>
 
-        {/* Skip back (general) */}
+        {/* Undo placeholder - future feature */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onSeek(0)}
-          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20"
+          className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20 opacity-50"
+          disabled
         >
           <RotateCcw className="h-5 w-5" />
         </Button>
@@ -152,27 +160,41 @@ export function AudioPlayer({
           <span className="absolute text-[10px] font-bold">3</span>
         </Button>
 
-        {/* Loop */}
+        {/* Loop A-B with color states */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={onToggleLoop}
+          onClick={onCycleLoopState}
           className={cn(
-            "h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20",
-            isLooping && "bg-primary-foreground/20"
+            "h-10 w-10 hover:bg-primary-foreground/20 transition-colors",
+            loopState === 'off' && "text-primary-foreground",
+            loopState === 'point-a' && "text-yellow-400 bg-primary-foreground/10",
+            loopState === 'loop-ab' && "text-green-400 bg-primary-foreground/20"
           )}
+          title={
+            loopState === 'off' ? 'Establecer punto A' :
+            loopState === 'point-a' ? 'Establecer punto B' :
+            'Desactivar loop'
+          }
         >
           <Repeat className="h-5 w-5" />
+          {loopState === 'point-a' && (
+            <span className="absolute text-[8px] font-bold text-yellow-400">A</span>
+          )}
+          {loopState === 'loop-ab' && (
+            <span className="absolute text-[8px] font-bold text-green-400">AB</span>
+          )}
         </Button>
 
-        {/* Playback rate / Metadata */}
+        {/* Timestamp button */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={onCyclePlaybackRate}
+          onClick={onMarkTimestamp}
           className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/20"
+          title="Agregar timestamp a la línea actual"
         >
-          <span className="text-xs font-bold">{playbackRate}x</span>
+          <Hash className="h-5 w-5" />
         </Button>
       </div>
     </div>

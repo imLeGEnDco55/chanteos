@@ -10,7 +10,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime, parseTime } from '@/lib/syllables';
 import type { Song, LyricLine as LyricLineType } from '@/types/song';
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -27,6 +27,7 @@ interface SongEditorProps {
 
 export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
   const [showNotes, setShowNotes] = useState(false);
+  const [focusedLineIndex, setFocusedLineIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const player = useAudioPlayer(song.audioData || null);
@@ -75,6 +76,24 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
     newLyrics[index] = { ...newLyrics[index], timestamp };
     onUpdate({ lyrics: newLyrics });
   };
+
+  // Smart timestamp: if a line is focused, add timestamp to it; otherwise create new line
+  const handleSmartTimestamp = useCallback(() => {
+    const currentTime = player.getCurrentTime();
+    const timestamp = formatTime(currentTime);
+    
+    if (focusedLineIndex !== null && focusedLineIndex < song.lyrics.length) {
+      // Add timestamp to focused line
+      const newLyrics = [...song.lyrics];
+      newLyrics[focusedLineIndex] = { ...newLyrics[focusedLineIndex], timestamp };
+      onUpdate({ lyrics: newLyrics });
+    } else {
+      // Create new line with timestamp
+      const newLine = { ...createEmptyLine(), timestamp };
+      const newLyrics = [...song.lyrics, newLine];
+      onUpdate({ lyrics: newLyrics });
+    }
+  }, [focusedLineIndex, song.lyrics, player, onUpdate]);
 
   const handleLoadAudio = () => {
     fileInputRef.current?.click();
@@ -158,6 +177,8 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
                   onUpdate={(updated) => handleUpdateLine(index, updated)}
                   onDelete={() => handleDeleteLine(index)}
                   onMarkTimestamp={() => handleMarkTimestamp(index)}
+                  onFocus={() => setFocusedLineIndex(index)}
+                  onBlur={() => setFocusedLineIndex(null)}
                   canDelete={song.lyrics.length > 1}
                   isActive={activeLineIndex === index}
                 />
@@ -199,16 +220,19 @@ export function SongEditor({ song, onBack, onUpdate }: SongEditorProps) {
         currentTime={player.currentTime}
         duration={player.duration}
         playbackRate={player.playbackRate}
-        isLooping={player.isLooping}
+        loopState={player.loopState}
+        loopPointA={player.loopPointA}
+        loopPointB={player.loopPointB}
         hasAudio={player.hasAudio}
         audioFileName={song.audioFileName}
         onTogglePlay={player.togglePlay}
         onSeek={player.seek}
         onCyclePlaybackRate={player.cyclePlaybackRate}
-        onToggleLoop={player.toggleLoop}
+        onCycleLoopState={player.cycleLoopState}
         onLoadAudio={handleLoadAudio}
         onSkipBack={player.skipBack}
         onSkipForward={player.skipForward}
+        onMarkTimestamp={handleSmartTimestamp}
       />
     </div>
   );

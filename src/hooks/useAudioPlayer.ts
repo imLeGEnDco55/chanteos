@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { AudioPlayerState } from '@/types/song';
+import type { AudioPlayerState, LoopState } from '@/types/song';
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5];
 const SKIP_SECONDS = 3;
@@ -11,7 +11,9 @@ export function useAudioPlayer(audioData: string | null) {
     currentTime: 0,
     duration: 0,
     playbackRate: 1,
-    isLooping: false,
+    loopState: 'off',
+    loopPointA: null,
+    loopPointB: null,
   });
 
   // Crear/actualizar el elemento de audio cuando cambia audioData
@@ -33,13 +35,21 @@ export function useAudioPlayer(audioData: string | null) {
     };
 
     const handleTimeUpdate = () => {
-      setState(prev => ({ ...prev, currentTime: audio.currentTime }));
+      const currentTime = audio.currentTime;
+      setState(prev => {
+        // Check if we need to loop back to point A
+        if (prev.loopState === 'loop-ab' && prev.loopPointA !== null && prev.loopPointB !== null) {
+          if (currentTime >= prev.loopPointB) {
+            audio.currentTime = prev.loopPointA;
+            return { ...prev, currentTime: prev.loopPointA };
+          }
+        }
+        return { ...prev, currentTime };
+      });
     };
 
     const handleEnded = () => {
-      if (!state.isLooping) {
-        setState(prev => ({ ...prev, isPlaying: false }));
-      }
+      setState(prev => ({ ...prev, isPlaying: false }));
     };
 
     const handlePlay = () => setState(prev => ({ ...prev, isPlaying: true }));
@@ -61,13 +71,12 @@ export function useAudioPlayer(audioData: string | null) {
     };
   }, [audioData]);
 
-  // Sincronizar playbackRate y loop
+  // Sincronizar playbackRate
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.playbackRate = state.playbackRate;
-      audioRef.current.loop = state.isLooping;
     }
-  }, [state.playbackRate, state.isLooping]);
+  }, [state.playbackRate]);
 
   const play = useCallback(() => {
     audioRef.current?.play();
@@ -121,9 +130,29 @@ export function useAudioPlayer(audioData: string | null) {
     });
   }, []);
 
-  const toggleLoop = useCallback(() => {
-    setState(prev => ({ ...prev, isLooping: !prev.isLooping }));
+  // Cycle through loop states: off -> point-a -> loop-ab -> off
+  const cycleLoopState = useCallback(() => {
+    setState(prev => {
+      const currentTime = audioRef.current?.currentTime ?? 0;
+      
+      if (prev.loopState === 'off') {
+        // Set point A
+        return { ...prev, loopState: 'point-a' as LoopState, loopPointA: currentTime, loopPointB: null };
+      } else if (prev.loopState === 'point-a') {
+        // Set point B (must be after point A)
+        const pointB = Math.max(currentTime, (prev.loopPointA ?? 0) + 0.5);
+        return { ...prev, loopState: 'loop-ab' as LoopState, loopPointB: pointB };
+      } else {
+        // Reset to off
+        return { ...prev, loopState: 'off' as LoopState, loopPointA: null, loopPointB: null };
+      }
+    });
   }, []);
+
+  // Legacy toggle for compatibility (now just cycles)
+  const toggleLoop = useCallback(() => {
+    cycleLoopState();
+  }, [cycleLoopState]);
 
   const getCurrentTime = useCallback((): number => {
     return audioRef.current?.currentTime ?? 0;
@@ -140,6 +169,7 @@ export function useAudioPlayer(audioData: string | null) {
     setPlaybackRate,
     cyclePlaybackRate,
     toggleLoop,
+    cycleLoopState,
     getCurrentTime,
     hasAudio: !!audioData,
   };

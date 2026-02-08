@@ -11,6 +11,8 @@ interface LyricLineProps {
   onUpdate: (line: LyricLineType) => void;
   onDelete: () => void;
   onMarkTimestamp: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   canDelete: boolean;
   isActive?: boolean;
 }
@@ -20,10 +22,22 @@ export function LyricLine({
   onUpdate,
   onDelete,
   onMarkTimestamp,
+  onFocus,
+  onBlur,
   canDelete,
   isActive = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    onFocus?.();
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    onBlur?.();
+  };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate(updateLineText(line, e.target.value));
@@ -68,8 +82,8 @@ export function LyricLine({
         type="text"
         value={line.text}
         onChange={handleTextChange}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         placeholder="Escribe aquí..."
         className={cn(
           "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
