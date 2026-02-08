@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, FileText } from 'lucide-react';
@@ -6,13 +6,15 @@ import type { LyricLine as LyricLineType } from '@/types/song';
 import { cn } from '@/lib/utils';
 
 interface PromptLineProps {
+  index: number;
   line: LyricLineType;
-  onUpdate: (line: LyricLineType) => void;
-  onDelete: () => void;
+  onUpdate: (index: number, line: LyricLineType) => void;
+  onDelete: (index: number) => void;
   canDelete: boolean;
 }
 
-export function PromptLine({
+export const PromptLine = memo(function PromptLine({
+  index,
   line,
   onUpdate,
   onDelete,
@@ -21,7 +23,7 @@ export function PromptLine({
   const [isFocused, setIsFocused] = useState(false);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate({ ...line, text: e.target.value });
+    onUpdate(index, { ...line, text: e.target.value });
   };
 
   return (
@@ -55,7 +57,7 @@ export function PromptLine({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onDelete}
+            onClick={() => onDelete(index)}
             className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
           >
             <Trash2 className="h-3 w-3" />
@@ -64,4 +66,4 @@ export function PromptLine({
       </div>
     </div>
   );
-}
+});

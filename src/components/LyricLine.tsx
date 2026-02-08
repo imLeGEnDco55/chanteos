@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, memo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock } from 'lucide-react';
@@ -7,18 +7,20 @@ import type { LyricLine as LyricLineType } from '@/types/song';
 import { cn } from '@/lib/utils';
 
 interface LyricLineProps {
+  index: number;
   line: LyricLineType;
-  onUpdate: (line: LyricLineType) => void;
-  onDelete: () => void;
-  onMarkTimestamp: () => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
+  onUpdate: (index: number, line: LyricLineType) => void;
+  onDelete: (index: number) => void;
+  onMarkTimestamp: (index: number) => void;
+  onFocus?: (index: number) => void;
+  onBlur?: (index: number) => void;
   onWordSelect?: (word: string) => void;
   canDelete: boolean;
   isActive?: boolean;
 }
 
-export function LyricLine({
+export const LyricLine = memo(function LyricLine({
+  index,
   line,
   onUpdate,
   onDelete,
@@ -34,20 +36,16 @@ export function LyricLine({
 
   const handleFocus = () => {
     setIsFocused(true);
-    onFocus?.();
+    onFocus?.(index);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
-    onBlur?.();
+    onBlur?.(index);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(updateLineText(line, e.target.value));
-  };
-
-  const handleTimestampChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate({ ...line, timestamp: e.target.value });
+    onUpdate(index, updateLineText(line, e.target.value));
   };
 
   // Detect text selection and extract the selected word
@@ -107,7 +105,7 @@ export function LyricLine({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onMarkTimestamp}
+          onClick={() => onMarkTimestamp(index)}
           className={cn(
             "h-6 w-6 hover:text-primary",
             isActive ? "text-accent" : "text-muted-foreground"
@@ -154,7 +152,7 @@ export function LyricLine({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onDelete}
+            onClick={() => onDelete(index)}
             className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
           >
             <Trash2 className="h-3 w-3" />
@@ -163,4 +161,4 @@ export function LyricLine({
       </div>
     </div>
   );
-}
+});

@@ -37,8 +37,11 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const player = useAudioPlayer(song.audioData || null);
+  const { getCurrentTime } = player;
+
   const lyricsHistory = useLyricsHistory(song.lyrics);
   const rhymeSuggestions = useRhymeSuggestions();
+  const { fetchSuggestions } = rhymeSuggestions;
 
   // Reset history when song changes
   useEffect(() => {
@@ -80,32 +83,40 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     onUpdate({ lyrics: newLyrics });
   };
 
-  const handleUpdateLine = (index: number, updatedLine: LyricLineType) => {
+  const handleUpdateLine = useCallback((index: number, updatedLine: LyricLineType) => {
     const newLyrics = [...song.lyrics];
     newLyrics[index] = updatedLine;
     lyricsHistory.pushState(newLyrics);
     onUpdate({ lyrics: newLyrics });
-  };
+  }, [song.lyrics, lyricsHistory, onUpdate]);
 
-  const handleDeleteLine = (index: number) => {
+  const handleDeleteLine = useCallback((index: number) => {
     if (song.lyrics.length <= 1) return;
     const newLyrics = song.lyrics.filter((_, i) => i !== index);
     lyricsHistory.pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  };
+  }, [song.lyrics, lyricsHistory, onUpdate]);
 
-  const handleMarkTimestamp = (index: number) => {
-    const currentTime = player.getCurrentTime();
+  const handleMarkTimestamp = useCallback((index: number) => {
+    const currentTime = getCurrentTime();
     const timestamp = formatTime(currentTime);
     const newLyrics = [...song.lyrics];
     newLyrics[index] = { ...newLyrics[index], timestamp };
     lyricsHistory.pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
-  };
+  }, [getCurrentTime, song.lyrics, lyricsHistory, onUpdate]);
+
+  const handleFocus = useCallback((index: number) => {
+    setFocusedLineIndex(index);
+  }, []);
+
+  const handleBlur = useCallback((index: number) => {
+    setFocusedLineIndex(null);
+  }, []);
 
   // Smart timestamp: if a line is focused, add timestamp to it; otherwise create new line
   const handleSmartTimestamp = useCallback(() => {
-    const currentTime = player.getCurrentTime();
+    const currentTime = getCurrentTime();
     const timestamp = formatTime(currentTime);
     
     if (focusedLineIndex !== null && focusedLineIndex < song.lyrics.length) {
@@ -122,7 +133,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       lyricsHistory.pushState(newLyrics, true);
       onUpdate({ lyrics: newLyrics });
     }
-  }, [focusedLineIndex, song.lyrics, player, onUpdate, lyricsHistory]);
+  }, [focusedLineIndex, song.lyrics, getCurrentTime, onUpdate, lyricsHistory]);
 
   // Undo handler
   const handleUndo = useCallback(() => {
@@ -162,15 +173,15 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
 
   // Handle word selection for rhyme suggestions
   const handleWordSelect = useCallback((word: string) => {
-    rhymeSuggestions.fetchSuggestions(word);
+    fetchSuggestions(word);
     setShowRhymePanel(true);
-  }, [rhymeSuggestions]);
+  }, [fetchSuggestions]);
 
   // Handle clicking a rhyme word to insert it
   const handleRhymeWordClick = useCallback((word: string) => {
     // Fetch new rhymes for the clicked word
-    rhymeSuggestions.fetchSuggestions(word);
-  }, [rhymeSuggestions]);
+    fetchSuggestions(word);
+  }, [fetchSuggestions]);
 
   // Toggle rhyme panel
   const handleToggleRhymePanel = useCallback(() => {
@@ -248,19 +259,21 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
               >
                 {line.type === 'prompt' ? (
                   <PromptLine
+                    index={index}
                     line={line}
-                    onUpdate={(updated) => handleUpdateLine(index, updated)}
-                    onDelete={() => handleDeleteLine(index)}
+                    onUpdate={handleUpdateLine}
+                    onDelete={handleDeleteLine}
                     canDelete={song.lyrics.length > 1}
                   />
                 ) : (
                   <LyricLine
+                    index={index}
                     line={line}
-                    onUpdate={(updated) => handleUpdateLine(index, updated)}
-                    onDelete={() => handleDeleteLine(index)}
-                    onMarkTimestamp={() => handleMarkTimestamp(index)}
-                    onFocus={() => setFocusedLineIndex(index)}
-                    onBlur={() => setFocusedLineIndex(null)}
+                    onUpdate={handleUpdateLine}
+                    onDelete={handleDeleteLine}
+                    onMarkTimestamp={handleMarkTimestamp}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                     onWordSelect={handleWordSelect}
                     canDelete={song.lyrics.length > 1}
                     isActive={activeLineIndex === index}
