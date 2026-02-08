@@ -8,6 +8,7 @@ The repository has been stripped of unused components, lockfiles, and test direc
 - Deleted `src/test` and `src/integrations` folders.
 - Removed 30+ unused Shadcn UI components.
 - Cleaned `package.json` dependencies.
+- Removed unused `supabase` directory (legacy code).
 - Updated `.gitignore`.
 
 ## 📦 Current Stack (Lean)
