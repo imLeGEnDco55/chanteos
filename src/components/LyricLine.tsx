@@ -119,6 +119,7 @@ export const LyricLine = memo(function LyricLine({
             isActive ? "text-accent" : "text-muted-foreground"
           )}
           title="Marcar tiempo actual"
+          aria-label="Marcar tiempo actual"
         >
           <Clock className="h-3 w-3" />
         </Button>
@@ -140,6 +141,7 @@ export const LyricLine = memo(function LyricLine({
         onBlur={handleBlur}
         onDoubleClick={handleDoubleClick}
         placeholder="Escribe aquí..."
+        aria-label="Texto de la línea"
         className={cn(
           "flex-1 text-center min-h-[2rem] max-h-[10rem] py-1 bg-transparent border-none focus-visible:ring-1 resize-none overflow-y-auto",
           isActive && "text-foreground font-medium"
@@ -162,6 +164,7 @@ export const LyricLine = memo(function LyricLine({
             size="icon"
             onClick={() => onDelete(index)}
             className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
+            aria-label="Eliminar línea"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
