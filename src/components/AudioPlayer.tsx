@@ -77,13 +77,13 @@ export function AudioPlayer({
 
   if (!hasAudio) {
     return (
-      <div 
-        className="fixed left-0 right-0 bg-primary p-4 safe-area-bottom transition-all duration-150"
-        style={{ bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
+      <div
+        className="w-full bg-primary p-4 safe-area-bottom transition-all duration-150 border-t border-white/10"
+        style={{ marginBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
       >
-        <Button 
+        <Button
           onClick={onLoadAudio}
-          variant="secondary" 
+          variant="secondary"
           className="w-full gap-2"
         >
           <Music className="h-4 w-4" />
@@ -99,9 +99,9 @@ export function AudioPlayer({
   };
 
   return (
-    <div 
-      className="fixed left-0 right-0 bg-primary safe-area-bottom transition-all duration-150"
-      style={{ bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
+    <div
+      className="w-full bg-primary safe-area-bottom transition-all duration-150 z-50 border-t border-white/10"
+      style={{ marginBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px' }}
       onMouseDown={preventFocusLoss}
       onTouchStart={preventFocusLoss}
     >
@@ -127,8 +127,8 @@ export function AudioPlayer({
         related={related}
         isLoading={isLoadingRhymes}
         error={rhymeError || null}
-        onWordClick={onRhymeWordClick || (() => {})}
-        onRetry={onRetryRhymes || (() => {})}
+        onWordClick={onRhymeWordClick || (() => { })}
+        onRetry={onRetryRhymes || (() => { })}
       />
 
       {/* Progress bar with time labels */}
@@ -152,7 +152,7 @@ export function AudioPlayer({
           </span>
         </div>
       </div>
-      
+
       {/* Controls - matching mockup layout */}
       <div className="flex items-center justify-center gap-2 px-4 py-3">
         {/* Prompt Library button */}
@@ -234,13 +234,13 @@ export function AudioPlayer({
           )}
           title={
             loopState === 'off' ? 'Establecer punto A' :
-            loopState === 'point-a' ? 'Establecer punto B' :
-            'Desactivar loop'
+              loopState === 'point-a' ? 'Establecer punto B' :
+                'Desactivar loop'
           }
           aria-label={
             loopState === 'off' ? 'Establecer punto A de bucle' :
-            loopState === 'point-a' ? 'Establecer punto B de bucle' :
-            'Desactivar bucle'
+              loopState === 'point-a' ? 'Establecer punto B de bucle' :
+                'Desactivar bucle'
           }
         >
           <Repeat className="h-5 w-5" />

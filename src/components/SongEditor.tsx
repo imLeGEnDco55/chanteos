@@ -257,7 +257,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       </header>
 
       {/* Content */}
-      <ScrollArea className="flex-1 pb-40">
+      <ScrollArea className="flex-1">
         {showNotes ? (
           <div className="p-4">
             <Textarea
