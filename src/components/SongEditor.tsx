@@ -101,6 +101,22 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     onUpdate({ lyrics: newLyrics });
   }, [pushState, onUpdate]);
 
+  const handleInsertLine = useCallback((index: number) => {
+    const currentLyrics = lyricsRef.current;
+    const newLine = createEmptyLine();
+    const newLyrics = [...currentLyrics];
+    newLyrics.splice(index + 1, 0, newLine);
+
+    pushState(newLyrics, true);
+    onUpdate({ lyrics: newLyrics });
+
+    // Focus the new line (next index)
+    // We set a small timeout to allow the new component to mount
+    setTimeout(() => {
+      setFocusedLineIndex(index + 1);
+    }, 0);
+  }, [pushState, onUpdate]);
+
   const handleDeleteLine = useCallback((index: number) => {
     const currentLyrics = lyricsRef.current;
     if (currentLyrics.length <= 1) return;
@@ -257,7 +273,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       </header>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 pb-40">
         {showNotes ? (
           <div className="p-4">
             <Textarea
@@ -292,6 +308,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
                     line={line}
                     onUpdate={handleUpdateLine}
                     onDelete={handleDeleteLine}
+                    onInsertLine={handleInsertLine}
                     onMarkTimestamp={handleMarkTimestamp}
                     onFocus={handleFocus}
                     onBlur={handleBlur}

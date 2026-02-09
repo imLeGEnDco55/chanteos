@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, memo } from 'react';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock } from 'lucide-react';
 import { updateLineText } from '@/hooks/useSongs';
@@ -11,6 +11,7 @@ interface LyricLineProps {
   line: LyricLineType;
   onUpdate: (index: number, line: LyricLineType) => void;
   onDelete: (index: number) => void;
+  onInsertLine?: (index: number) => void;
   onMarkTimestamp: (index: number) => void;
   onFocus?: (index: number) => void;
   onBlur?: (index: number) => void;
@@ -24,6 +25,7 @@ export const LyricLine = memo(function LyricLine({
   line,
   onUpdate,
   onDelete,
+  onInsertLine,
   onMarkTimestamp,
   onFocus,
   onBlur,
@@ -32,7 +34,7 @@ export const LyricLine = memo(function LyricLine({
   isActive = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -44,15 +46,15 @@ export const LyricLine = memo(function LyricLine({
     onBlur?.(index);
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate(index, updateLineText(line, e.target.value));
   };
 
-  // Handle Shift+Enter for line breaks
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  // Handle Shift+Enter for new line insertion
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && e.shiftKey) {
-      // Allow default behavior (line break)
-      e.stopPropagation();
+      e.preventDefault();
+      onInsertLine?.(index);
     }
   };
 
@@ -131,8 +133,9 @@ export const LyricLine = memo(function LyricLine({
       </div>
 
       {/* Texto de la letra (Centro) */}
-      <Textarea
+      <Input
         ref={inputRef}
+        type="text"
         value={line.text}
         onChange={handleTextChange}
         onKeyDown={handleKeyDown}
@@ -141,10 +144,9 @@ export const LyricLine = memo(function LyricLine({
         onDoubleClick={handleDoubleClick}
         placeholder="Escribe aquí..."
         className={cn(
-          "flex-1 text-center min-h-[2rem] max-h-[10rem] py-1 bg-transparent border-none focus-visible:ring-1 resize-none overflow-y-auto",
+          "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
           isActive && "text-foreground font-medium"
         )}
-        rows={1}
       />
 
       {/* Contador de sílabas (Ala derecha) */}

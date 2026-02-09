@@ -15,18 +15,18 @@ export function useKeyboardHeight() {
 
     const viewport = window.visualViewport;
 
-    // Store initial height to compare against
-    const initialHeight = window.innerHeight;
-
     const handleResize = () => {
-      // Calculate the difference between window height and viewport height
-      // This difference is approximately the keyboard height
-      const currentHeight = viewport.height;
-      const heightDiff = initialHeight - currentHeight;
+      // Calculate the difference between layout height and viewport height
+      // On Android, innerHeight shrinks so diff is 0 (handled by layout)
+      // On iOS, innerHeight stays constant so diff is keyboard height
+      const currentVisualHeight = viewport.height;
+      const currentLayoutHeight = window.innerHeight;
 
-      // Only set keyboard height if there's a significant difference (> 100px)
-      // This helps avoid false positives from browser UI changes
-      if (heightDiff > 100) {
+      const heightDiff = currentLayoutHeight - currentVisualHeight;
+
+      // Only set keyboard height if there's a significant difference
+      // We use a smaller threshold (e.g. 50px) to catch the keyboard
+      if (heightDiff > 50) {
         setKeyboardHeight(heightDiff);
       } else {
         setKeyboardHeight(0);
