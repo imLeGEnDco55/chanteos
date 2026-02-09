@@ -33,9 +33,9 @@ export const PromptLine = memo(function PromptLine({
         isFocused && "bg-accent/40"
       )}
     >
-      {/* Prompt icon indicator */}
-      <div className="flex items-center justify-center min-w-[60px]">
-        <FileText className="h-4 w-4 text-accent" />
+      {/* Prompt icon indicator (Ala izquierda) */}
+      <div className="flex items-center justify-start min-w-[32px] pl-1">
+        <FileText className="h-3 w-3 text-accent/70" />
       </div>
 
       {/* Prompt text (full width, no syllable count) */}
@@ -45,20 +45,21 @@ export const PromptLine = memo(function PromptLine({
         onChange={handleTextChange}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder="[Verse], [Chorus], instrucciones..."
+        placeholder="[Verse], [Chorus]..."
         className={cn(
-          "flex-1 h-auto py-0 bg-transparent border-none focus-visible:ring-1 italic text-accent text-center"
+          "flex-1 h-auto py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm italic text-accent text-center placeholder:text-accent/30"
         )}
       />
 
-      {/* Delete button only */}
-      <div className="flex items-center gap-1 min-w-[40px] justify-end">
+      {/* Delete button (Ala derecha) */}
+      <div className="flex items-center justify-end min-w-[24px] pr-1">
         {canDelete && (
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onDelete(index)}
-            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
+            className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-transparent"
+            title="Borrar prompt"
           >
             <Trash2 className="h-3 w-3" />
           </Button>

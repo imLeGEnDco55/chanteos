@@ -137,24 +137,17 @@ export const LyricLine = memo(function LyricLine({
 
       {/* Contador de sílabas (Ala derecha) */}
       <div className="flex items-center justify-end min-w-[24px] pr-1">
-        <span className={cn(
-          "text-[10px] font-mono leading-none select-none",
-          isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground opacity-50"
-        )}>
+        <span
+          onClick={() => canDelete && onDelete(index)}
+          className={cn(
+            "text-[10px] font-mono leading-none select-none transition-colors",
+            isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground opacity-50",
+            canDelete && "cursor-pointer hover:text-destructive hover:opacity-100 hover:scale-110 transform duration-75"
+          )}
+          title={canDelete ? "Borrar línea" : undefined}
+        >
           {line.syllableCount}
         </span>
-
-        {canDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(index)}
-            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity absolute right-0"
-            style={{ display: isFocused ? 'flex' : 'none' }} // Only show on focus/hover logic if needed, but for now absolute might overlap
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        )}
       </div>
 
     </div>
