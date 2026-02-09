@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Song, LyricLine } from '@/types/song';
 import { countSyllables } from '@/lib/syllables';
 import {
@@ -88,12 +88,40 @@ export function useSongs() {
     loadData();
   }, []);
 
-  // Save when songs change (excluding audioData)
+  // Keep track of the latest songs for cleanup/unmount
+  const songsRef = useRef(songs);
   useEffect(() => {
-    if (isLoaded) {
+    songsRef.current = songs;
+  }, [songs]);
+
+  // Save when songs change (debounced)
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const timeoutId = setTimeout(() => {
       saveSongsToStorage(songs);
-    }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
   }, [songs, isLoaded]);
+
+  // Save on unmount or refresh to catch pending changes
+  useEffect(() => {
+    const handleUnload = () => {
+      if (isLoaded) {
+        saveSongsToStorage(songsRef.current);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      if (isLoaded) {
+        saveSongsToStorage(songsRef.current);
+      }
+    };
+  }, [isLoaded]);
 
   const createSong = useCallback(async (title: string, audioFile: File | null): Promise<Song> => {
     const songId = generateId();
