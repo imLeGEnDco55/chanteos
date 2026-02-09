@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, memo } from 'react';
+import { useState, useRef, useCallback, memo, useEffect } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
@@ -17,6 +17,7 @@ interface LyricLineProps {
   onWordSelect?: (word: string) => void;
   canDelete: boolean;
   isActive?: boolean;
+  shouldFocus?: boolean;
 }
 
 export const LyricLine = memo(function LyricLine({
@@ -30,9 +31,22 @@ export const LyricLine = memo(function LyricLine({
   onWordSelect,
   canDelete,
   isActive = false,
+  shouldFocus = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus effect
+  useEffect(() => {
+    if (shouldFocus && inputRef.current) {
+      inputRef.current.focus();
+      // Ensure cursor is at the end if there's text (though usually empty on new line)
+      inputRef.current.setSelectionRange(
+        inputRef.current.value.length,
+        inputRef.current.value.length
+      );
+    }
+  }, [shouldFocus]);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -44,11 +58,15 @@ export const LyricLine = memo(function LyricLine({
     onBlur?.(index);
   };
 
-  // Handle Enter (or Shift+Enter) for new line insertion
+  // Handle Enter (New Block) vs Shift+Enter (Newline)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      onInsertLine?.(index);
+      if (!e.shiftKey) {
+        // Enter WITHOUT Shift -> New Block
+        e.preventDefault();
+        onInsertLine?.(index);
+      }
+      // Enter WITH Shift -> Default behavior (Newline in Textarea)
     }
   };
 

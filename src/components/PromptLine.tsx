@@ -1,4 +1,4 @@
-import { useState, memo, useRef } from 'react';
+import { useState, memo, useRef, useEffect } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
 import { Trash2, FileText } from 'lucide-react';
@@ -11,7 +11,8 @@ interface PromptLineProps {
   onUpdate: (index: number, line: LyricLineType) => void;
   onDelete: (index: number) => void;
   canDelete: boolean;
-  onInsertLine?: (index: number) => void; // Need to add this prop if we want Enter to work
+  onInsertLine?: (index: number) => void;
+  shouldFocus?: boolean;
 }
 
 export const PromptLine = memo(function PromptLine({
@@ -21,9 +22,22 @@ export const PromptLine = memo(function PromptLine({
   onDelete,
   canDelete,
   onInsertLine,
+  shouldFocus = false,
 }: PromptLineProps) {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus effect
+  useEffect(() => {
+    if (shouldFocus && inputRef.current) {
+      inputRef.current.focus();
+      // Ensure cursor is at the end if there's text
+      inputRef.current.setSelectionRange(
+        inputRef.current.value.length,
+        inputRef.current.value.length
+      );
+    }
+  }, [shouldFocus]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onUpdate(index, { ...line, text: e.target.value });
@@ -31,8 +45,12 @@ export const PromptLine = memo(function PromptLine({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      onInsertLine?.(index);
+      if (!e.shiftKey) {
+        // Enter WITHOUT Shift -> New Block
+        e.preventDefault();
+        onInsertLine?.(index);
+      }
+      // Enter WITH Shift -> Default behavior (Newline)
     }
   };
 

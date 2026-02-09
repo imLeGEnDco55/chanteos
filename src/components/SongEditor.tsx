@@ -302,6 +302,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
                     onDelete={handleDeleteLine}
                     canDelete={song.lyrics.length > 1}
                     onInsertLine={handleInsertLine}
+                    shouldFocus={focusedLineIndex === index}
                   />
                 ) : (
                   <LyricLine
@@ -314,6 +315,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
                     onBlur={handleBlur}
                     onWordSelect={handleWordSelect}
                     canDelete={song.lyrics.length > 1}
+                    shouldFocus={focusedLineIndex === index}
                     isActive={activeLineIndex === index}
                   />
                 )}
