@@ -50,9 +50,9 @@ export const LyricLine = memo(function LyricLine({
     onUpdate(index, updateLineText(line, e.target.value));
   };
 
-  // Handle Shift+Enter for new line insertion
+  // Handle Enter (or Shift+Enter) for new line insertion
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && e.shiftKey) {
+    if (e.key === 'Enter') {
       e.preventDefault();
       onInsertLine?.(index);
     }

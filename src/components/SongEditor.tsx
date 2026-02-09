@@ -227,7 +227,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const lyricLineCount = song.lyrics.filter(line => line.type !== 'prompt').length;
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full w-full bg-background overflow-hidden">
       {/* Header */}
       <header className="flex items-center gap-2 p-3 border-b border-border bg-card">
         <Button variant="ghost" size="icon" onClick={onBack}>
@@ -273,9 +273,9 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       </header>
 
       {/* Content */}
-      <ScrollArea className="flex-1 pb-40">
+      <ScrollArea className="flex-1">
         {showNotes ? (
-          <div className="p-4">
+          <div className="p-4 pb-40">
             <Textarea
               value={song.notes}
               onChange={(e) => onUpdate({ notes: e.target.value })}
@@ -284,7 +284,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
             />
           </div>
         ) : (
-          <div className="py-2">
+          <div className="py-2 pb-40">
             {/* Lyrics lines */}
             {song.lyrics.map((line, index) => (
               <div

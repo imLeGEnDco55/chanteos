@@ -55,7 +55,7 @@ const Index = () => {
   }
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-[100dvh] w-full overflow-hidden">
       {selectedSong ? (
         <SongEditor
           song={selectedSong}

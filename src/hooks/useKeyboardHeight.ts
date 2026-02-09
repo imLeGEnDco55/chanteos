@@ -16,11 +16,22 @@ export function useKeyboardHeight() {
     const viewport = window.visualViewport;
 
     const handleResize = () => {
-      // Calculate the difference between layout height and viewport height
-      // On Android, innerHeight shrinks so diff is 0 (handled by layout)
-      // On iOS, innerHeight stays constant so diff is keyboard height
       const currentVisualHeight = viewport.height;
       const currentLayoutHeight = window.innerHeight;
+
+      // Heuristic: If layout height has shrunk significantly (Android behavior),
+      // the browser is handling the keyboard via resize.
+      // We compare against screen.availHeight (or outerHeight as fallback).
+      const screenHeight = window.screen.availHeight || window.outerHeight;
+
+      // If layout height is less than 85% of screen height, assume it's resized by keyboard
+      // Note: On landscape this might be tricky, but for portrait rhymes app it's safe.
+      const isLayoutResized = currentLayoutHeight < screenHeight * 0.85;
+
+      if (isLayoutResized) {
+        setKeyboardHeight(0);
+        return;
+      }
 
       const heightDiff = currentLayoutHeight - currentVisualHeight;
 
