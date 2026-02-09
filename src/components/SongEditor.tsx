@@ -1,4 +1,4 @@
-import { Plus, ChevronLeft, MoreVertical, FileText } from 'lucide-react';
+import { Plus, ChevronLeft, MoreVertical, FileText, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,6 @@ import { useRhymeSuggestions } from '@/hooks/useRhymeSuggestions';
 import { createEmptyLine } from '@/hooks/useSongs';
 import { formatTime, parseTime } from '@/lib/syllables';
 import { exportProjectAsChnt, exportLyricsAsTxt } from '@/lib/projectFile';
-import { toast } from 'sonner';
 import type { Song, LyricLine as LyricLineType, PromptTemplate } from '@/types/song';
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -125,16 +124,6 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     onUpdate({ lyrics: newLyrics });
   }, [pushState, onUpdate]);
 
-  const handleMarkTimestamp = useCallback((index: number) => {
-    const currentLyrics = lyricsRef.current;
-    const currentTime = getCurrentTime();
-    const timestamp = formatTime(currentTime);
-    const newLyrics = [...currentLyrics];
-    newLyrics[index] = { ...newLyrics[index], timestamp };
-    pushState(newLyrics, true);
-    onUpdate({ lyrics: newLyrics });
-  }, [getCurrentTime, pushState, onUpdate]);
-
   const handleFocus = useCallback((index: number) => {
     setFocusedLineIndex(index);
   }, []);
@@ -227,132 +216,143 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const lyricLineCount = song.lyrics.filter(line => line.type !== 'prompt').length;
 
   return (
-    <div className="flex flex-col h-full w-full bg-background overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center gap-2 p-3 border-b border-border bg-card">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ChevronLeft className="h-5 w-5" />
+    <div className="flex flex-col h-full w-full bg-background overflow-hidden relative">
+      {/* Navigation Bar */}
+      <header className="absolute top-0 left-0 right-0 z-10 flex items-center gap-2 p-3 bg-gradient-to-b from-background via-background/80 to-transparent">
+        <Button variant="ghost" size="icon" onClick={onBack} className="text-zinc-400 hover:text-white shrink-0">
+          <ChevronLeft className="h-6 w-6" />
         </Button>
 
-        <div className="flex-1 min-w-0 flex flex-col items-center">
+        <div className="flex-1 min-w-0 flex flex-col items-center justify-center">
           <Input
             type="text"
             value={song.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            className="text-lg font-bold bg-transparent border-none focus-visible:ring-1 px-0 text-center"
+            className="text-lg font-bold bg-transparent border-none focus-visible:ring-0 px-0 text-center h-auto py-0 text-white placeholder:text-zinc-600 truncate w-full"
             placeholder="Título de la canción"
           />
           {song.audioFileName && (
-            <p className="text-xs text-accent font-medium uppercase tracking-wide truncate text-center">
-              {song.audioFileName.replace(/\.[^/.]+$/, '')}
-            </p>
+            <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium tracking-wide bg-zinc-900/50 px-2 py-0.5 rounded-full mt-1 max-w-full truncate">
+              <Music className="h-3 w-3 shrink-0" />
+              <span className="truncate">{song.audioFileName.replace(/\.[^/.]+$/, '')}</span>
+            </div>
           )}
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white shrink-0">
               <MoreVertical className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => exportProjectAsChnt(song)}>
+          <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10">
+            <DropdownMenuItem onClick={() => exportProjectAsChnt(song)} className="cursor-pointer">
               Exportar Proyecto (.CHNT)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => exportLyricsAsTxt(song)}>
+            <DropdownMenuItem onClick={() => exportLyricsAsTxt(song)} className="cursor-pointer">
               Exportar Letra (.TXT)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowNotes(!showNotes)}>
+            <DropdownMenuItem onClick={() => setShowNotes(!showNotes)} className="cursor-pointer">
               {showNotes ? 'Ver letras' : 'Ver notas'}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLoadAudio}>
+            <DropdownMenuItem onClick={handleLoadAudio} className="cursor-pointer">
               Cambiar audio
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
 
-      {/* Content */}
-      <ScrollArea className="flex-1">
-        {showNotes ? (
-          <div className="p-4 pb-40">
-            <Textarea
-              value={song.notes}
-              onChange={(e) => onUpdate({ notes: e.target.value })}
-              placeholder="Notas sobre la canción..."
-              className="min-h-[200px] resize-none"
-            />
-          </div>
-        ) : (
-          <div className="py-2 pb-40">
-            {/* Lyrics lines */}
-            {song.lyrics.map((line, index) => (
-              <div
-                key={line.id}
-                className={cn(
-                  "transition-colors duration-200",
-                  line.type !== 'prompt' && activeLineIndex === index && "bg-primary/10"
-                )}
-              >
-                {line.type === 'prompt' ? (
-                  <PromptLine
-                    index={index}
-                    line={line}
-                    onUpdate={handleUpdateLine}
-                    onDelete={handleDeleteLine}
-                    canDelete={song.lyrics.length > 1}
-                    onInsertLine={handleInsertLine}
-                    shouldFocus={focusedLineIndex === index}
-                  />
-                ) : (
-                  <LyricLine
-                    index={index}
-                    line={line}
-                    onUpdate={handleUpdateLine}
-                    onDelete={handleDeleteLine}
-                    onInsertLine={handleInsertLine}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    onWordSelect={handleWordSelect}
-                    canDelete={song.lyrics.length > 1}
-                    shouldFocus={focusedLineIndex === index}
-                    isActive={activeLineIndex === index}
-                  />
-                )}
+      {/* Content Canvas */}
+      <div className="flex-1 overflow-hidden pt-20">
+        <ScrollArea className="h-full">
+          {showNotes ? (
+            <div className="p-4 pb-48">
+              <Textarea
+                value={song.notes}
+                onChange={(e) => onUpdate({ notes: e.target.value })}
+                placeholder="Notas sobre la canción..."
+                className="min-h-[500px] resize-none bg-zinc-900/30 border-white/5 text-zinc-300 focus:bg-zinc-900/50 transition-colors p-4 text-base leading-relaxed"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col min-h-full pb-48">
+              {/* Lyrics List */}
+              <div className="flex-1 px-2 space-y-1">
+                {song.lyrics.map((line, index) => (
+                  <div
+                    key={line.id}
+                    className={cn(
+                      "transition-all duration-300 rounded-lg",
+                      line.type !== 'prompt' && activeLineIndex === index && "bg-white/5 shadow-sm shadow-black/5"
+                    )}
+                  >
+                    {line.type === 'prompt' ? (
+                      <PromptLine
+                        index={index}
+                        line={line}
+                        onUpdate={handleUpdateLine}
+                        onDelete={handleDeleteLine}
+                        canDelete={song.lyrics.length > 1}
+                        onInsertLine={handleInsertLine}
+                        shouldFocus={focusedLineIndex === index}
+                      />
+                    ) : (
+                      <LyricLine
+                        index={index}
+                        line={line}
+                        onUpdate={handleUpdateLine}
+                        onDelete={handleDeleteLine}
+                        onInsertLine={handleInsertLine}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        onWordSelect={handleWordSelect}
+                        canDelete={song.lyrics.length > 1}
+                        shouldFocus={focusedLineIndex === index}
+                        isActive={activeLineIndex === index}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
 
-            {/* Add line buttons */}
-            <div className="flex gap-2 px-3 mt-2">
-              <Button
-                variant="ghost"
-                onClick={handleAddLine}
-                className="flex-1 gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <Plus className="h-4 w-4" />
-                Línea
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={handleAddPromptLine}
-                className="flex-1 gap-2 text-accent hover:text-accent/80"
-              >
-                <FileText className="h-4 w-4" />
-                Prompt
-              </Button>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 px-4 mt-8 mb-4">
+                <Button
+                  variant="outline"
+                  onClick={handleAddLine}
+                  className="h-12 border-primary/20 bg-primary/5 hover:bg-primary/10 hover:border-primary/30 text-primary-foreground/90 font-medium"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Añadir Línea
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleAddPromptLine}
+                  className="h-12 border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/30 text-violet-300 font-medium"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Añadir Prompt
+                </Button>
+              </div>
+
+              {/* Stats Footer */}
+              <div className="flex items-center justify-center gap-6 py-4 opacity-40 hover:opacity-100 transition-opacity">
+                <div className="flex flex-col items-center">
+                  <span className="text-xl font-bold text-white">{lyricLineCount}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400">Líneas</span>
+                </div>
+                <div className="h-8 w-px bg-white/10"></div>
+                <div className="flex flex-col items-center">
+                  <span className="text-xl font-bold text-white">{totalSyllables}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400">Sílabas</span>
+                </div>
+              </div>
             </div>
+          )}
+        </ScrollArea>
+      </div>
 
-            {/* Stats */}
-            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-              <span>{lyricLineCount} líneas</span>
-              <span>•</span>
-              <span>{totalSyllables} sílabas</span>
-            </div>
-          </div>
-        )}
-      </ScrollArea>
-
-      {/* Hidden file input */}
+      {/* Inputs hidden */}
       <input
         ref={fileInputRef}
         type="file"
@@ -361,7 +361,6 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         className="hidden"
       />
 
-      {/* Prompt Library Dialog (for inserting only) */}
       <PromptLibraryDialog
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
@@ -373,38 +372,40 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         insertOnly
       />
 
-      {/* Audio Player with Rhyme Panel */}
-      <AudioPlayer
-        isPlaying={player.isPlaying}
-        currentTime={player.currentTime}
-        duration={player.duration}
-        playbackRate={player.playbackRate}
-        loopState={player.loopState}
-        loopPointA={player.loopPointA}
-        loopPointB={player.loopPointB}
-        hasAudio={player.hasAudio}
-        audioFileName={song.audioFileName}
-        onTogglePlay={player.togglePlay}
-        onSeek={player.seek}
-        onCyclePlaybackRate={player.cyclePlaybackRate}
-        onCycleLoopState={player.cycleLoopState}
-        onLoadAudio={handleLoadAudio}
-        onSkipBack={player.skipBack}
-        onSkipForward={player.skipForward}
-        onMarkTimestamp={handleSmartTimestamp}
-        onOpenPromptLibrary={handleOpenPromptLibrary}
-        onUndo={handleUndo}
-        canUndo={canUndo}
-        showRhymePanel={showRhymePanel}
-        onToggleRhymePanel={handleToggleRhymePanel}
-        selectedWord={rhymeSuggestions.selectedWord}
-        rhymes={rhymeSuggestions.suggestions?.rhymes || []}
-        related={rhymeSuggestions.suggestions?.related || []}
-        isLoadingRhymes={rhymeSuggestions.isLoading}
-        rhymeError={rhymeSuggestions.error}
-        onRhymeWordClick={handleRhymeWordClick}
-        onRetryRhymes={rhymeSuggestions.retry}
-      />
+      {/* Audio Player Fixed Bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-20">
+        <AudioPlayer
+          isPlaying={player.isPlaying}
+          currentTime={player.currentTime}
+          duration={player.duration}
+          playbackRate={player.playbackRate}
+          loopState={player.loopState}
+          loopPointA={player.loopPointA}
+          loopPointB={player.loopPointB}
+          hasAudio={player.hasAudio}
+          audioFileName={song.audioFileName}
+          onTogglePlay={player.togglePlay}
+          onSeek={player.seek}
+          onCyclePlaybackRate={player.cyclePlaybackRate}
+          onCycleLoopState={player.cycleLoopState}
+          onLoadAudio={handleLoadAudio}
+          onSkipBack={player.skipBack}
+          onSkipForward={player.skipForward}
+          onMarkTimestamp={handleSmartTimestamp}
+          onOpenPromptLibrary={handleOpenPromptLibrary}
+          onUndo={handleUndo}
+          canUndo={canUndo}
+          showRhymePanel={showRhymePanel}
+          onToggleRhymePanel={handleToggleRhymePanel}
+          selectedWord={rhymeSuggestions.selectedWord}
+          rhymes={rhymeSuggestions.suggestions?.rhymes || []}
+          related={rhymeSuggestions.suggestions?.related || []}
+          isLoadingRhymes={rhymeSuggestions.isLoading}
+          rhymeError={rhymeSuggestions.error}
+          onRhymeWordClick={handleRhymeWordClick}
+          onRetryRhymes={rhymeSuggestions.retry}
+        />
+      </div>
     </div>
   );
 }

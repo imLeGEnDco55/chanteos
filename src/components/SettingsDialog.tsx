@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Moon, Sun, Key, Download } from 'lucide-react';
+import { Settings, Plus, Trash2, Moon, Sun, Key, Download, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -83,228 +83,226 @@ export function SettingsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Ajustes">
+        <Button variant="ghost" size="icon" aria-label="Ajustes" className="w-10 h-10 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800">
           <Settings className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[85vh]">
-        <DialogHeader>
-          <DialogTitle>Ajustes</DialogTitle>
-          <DialogDescription>
-            Configura tus preferencias y claves API.
+      <DialogContent className="max-w-md max-h-[85vh] bg-zinc-950 border-white/10 text-zinc-100 p-0 overflow-hidden shadow-2xl shadow-black/50">
+        <DialogHeader className="p-6 bg-zinc-900/50 border-b border-white/5">
+          <DialogTitle className="text-xl font-bold text-white tracking-tight">Ajustes</DialogTitle>
+          <DialogDescription className="text-zinc-400">
+            Configura tu espacio creativo y motores de IA.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[70vh] pr-4">
-          <div className="space-y-6">
+        <ScrollArea className="max-h-[70vh]">
+          <div className="p-6 space-y-8">
             {/* Theme Section */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Apariencia
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="h-3 w-3" /> Apariencia
               </h3>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  {isDark ? (
-                    <Moon className="h-5 w-5 text-primary" />
-                  ) : (
-                    <Sun className="h-5 w-5 text-primary" />
-                  )}
-                  <Label htmlFor="dark-mode" className="cursor-pointer">
-                    Modo oscuro
-                  </Label>
+              <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-900/50 border border-white/5 hover:border-white/10 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center">
+                    {isDark ? (
+                      <Moon className="h-5 w-5 text-indigo-400" />
+                    ) : (
+                      <Sun className="h-5 w-5 text-yellow-400" />
+                    )}
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="dark-mode" className="text-zinc-100 font-medium cursor-pointer">
+                      Modo Oscuro
+                    </Label>
+                    <p className="text-xs text-zinc-500">Recomendado para sesiones nocturnas.</p>
+                  </div>
                 </div>
                 <Switch
                   id="dark-mode"
                   checked={isDark}
                   onCheckedChange={toggleTheme}
+                  className="data-[state=checked]:bg-indigo-500"
                 />
               </div>
             </div>
 
-            <Separator />
+            <Separator className="bg-white/5" />
 
             {/* AI Configuration Section */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Configuración IA (Gemini)
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                <Key className="h-3 w-3" /> Inteligencia Artificial
               </h3>
-              <div className="p-3 rounded-lg bg-muted/50 space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Key className="h-4 w-4 text-primary" />
-                  <Label htmlFor="api-key" className="cursor-pointer font-medium">
-                    Google Gemini API Key
-                  </Label>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    id="api-key"
-                    type={showKey ? "text" : "password"}
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className="flex-1"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  La clave se guarda localmente en tu navegador. Necesaria para sugerencias de rimas.
-                </p>
+              <div className="rounded-xl border border-white/5 overflow-hidden">
+                <div className="bg-zinc-900/50 p-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="api-key" className="text-zinc-300 text-sm">
+                      Google Gemini API Key
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="api-key"
+                        type={showKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Pegar API Key aquí..."
+                        className="bg-zinc-950 border-white/10 text-zinc-200 placeholder:text-zinc-700 pr-10 focus-visible:ring-indigo-500/50"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1 h-8 w-8 text-zinc-500 hover:text-zinc-300"
+                        onClick={() => setShowKey(!showKey)}
+                      >
+                        {showKey ? <Key className="h-4 w-4 text-indigo-400" /> : <Key className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
 
-                {/* MODEL SELECTOR */}
-                <div className="space-y-2 pt-2">
-                  <Label>Modelo de IA</Label>
-                  <Select value={model} onValueChange={setModel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un modelo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gemini-2.0-flash">
-                        ⚡ Gemini 2.0 Flash (Rápido/Estable)
-                      </SelectItem>
-                      <SelectItem value="gemini-2.5-flash-lite">
-                        🚀 Gemini 2.5 Flash Lite (Más Rápido/Económico)
-                      </SelectItem>
-                      <SelectItem value="gemini-3-flash-preview">
-                        🧪 Gemini 3 Flash Preview (Experimental)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Usa 2.0 para balance, 2.5 Lite para máxima velocidad, 3 Preview para las últimas capacidades (experimental).
-                  </p>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-300 text-sm">Modelo de Generación</Label>
+                    <Select value={model} onValueChange={setModel}>
+                      <SelectTrigger className="bg-zinc-950 border-white/10 text-zinc-200 focus:ring-indigo-500/50">
+                        <SelectValue placeholder="Selecciona un modelo" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/10 text-zinc-200">
+                        <SelectItem value="gemini-2.0-flash">
+                          <span className="flex items-center gap-2">⚡ Gemini 2.0 Flash <span className="text-xs text-zinc-500 ml-auto">Recomendado</span></span>
+                        </SelectItem>
+                        <SelectItem value="gemini-2.5-flash-lite">
+                          <span className="flex items-center gap-2">🚀 Gemini 2.5 Lite <span className="text-xs text-zinc-500 ml-auto">Rápido</span></span>
+                        </SelectItem>
+                        <SelectItem value="gemini-3-flash-preview">
+                          <span className="flex items-center gap-2">🧪 Gemini 3 Preview <span className="text-xs text-zinc-500 ml-auto">Nuevo</span></span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-
-                <Button onClick={handleSaveSettings} className="w-full">
-                  Guardar Ajustes
-                </Button>
+                <div className="bg-zinc-900/80 p-3 border-t border-white/5 flex justify-end">
+                  <Button onClick={handleSaveSettings} size="sm" className="bg-white text-black hover:bg-zinc-200 font-medium">
+                    Guardar Cambios
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <Separator />
+            <Separator className="bg-white/5" />
 
             {/* Prompt Library Section */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Librería de Prompts (Suno)
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Plantillas reutilizables para insertar en tus canciones
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleExportPrompts} title="Exportar librería">
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                  <Download className="h-3 w-3" /> Librería de Prompts
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportPrompts}
+                  className="h-7 text-xs border-white/10 bg-transparent text-zinc-400 hover:text-white hover:bg-white/5"
+                >
+                  Exportar JSON
                 </Button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {prompts.map((prompt) => (
                   <div
                     key={prompt.id}
-                    className="border border-border rounded-lg p-3 space-y-2"
+                    className="group flex items-center gap-3 p-3 rounded-lg bg-zinc-900/30 border border-white/5 hover:bg-zinc-900/60 hover:border-white/10 transition-all"
                   >
                     {editingId === prompt.id ? (
-                      <>
+                      <div className="flex-1 space-y-2">
                         <Input
                           value={prompt.name}
                           onChange={(e) => onUpdatePrompt(prompt.id, { name: e.target.value })}
-                          placeholder="Nombre del prompt"
-                          className="font-medium"
+                          className="bg-zinc-950 border-white/10 h-8 text-sm"
+                          autoFocus
                         />
                         <Textarea
                           value={prompt.content}
                           onChange={(e) => onUpdatePrompt(prompt.id, { content: e.target.value })}
-                          placeholder="Contenido..."
-                          rows={4}
+                          className="bg-zinc-950 border-white/10 text-sm min-h-[60px]"
                         />
-                        <Button
-                          size="sm"
-                          onClick={() => setEditingId(null)}
-                        >
-                          Guardar
-                        </Button>
-                      </>
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="h-7 text-xs hover:bg-white/5 text-zinc-400">Cancelar</Button>
+                          <Button size="sm" onClick={() => setEditingId(null)} className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700">Guardar</Button>
+                        </div>
+                      </div>
                     ) : (
                       <>
-                        <div className="flex items-center justify-between">
-                          <h4
-                            className="font-medium cursor-pointer hover:text-primary"
-                            onClick={() => setEditingId(prompt.id)}
-                          >
+                        <div
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => setEditingId(prompt.id)}
+                        >
+                          <h4 className="text-sm font-medium text-zinc-200 truncate group-hover:text-indigo-300 transition-colors">
                             {prompt.name}
                           </h4>
+                          <p className="text-xs text-zinc-500 truncate font-mono mt-0.5 opacity-70">
+                            {prompt.content}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeletePrompt(prompt.id)}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            className="h-8 w-8 text-zinc-600 hover:text-red-400 hover:bg-red-400/10 rounded-full"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                        <pre
-                          className="text-sm text-muted-foreground whitespace-pre-wrap font-mono bg-muted/50 p-2 rounded cursor-pointer hover:bg-muted"
-                          onClick={() => setEditingId(prompt.id)}
-                        >
-                          {prompt.content}
-                        </pre>
                       </>
                     )}
                   </div>
                 ))}
 
                 {isAdding ? (
-                  <div className="border border-dashed border-primary rounded-lg p-3 space-y-2">
+                  <div className="p-3 rounded-lg border border-dashed border-indigo-500/30 bg-indigo-500/5 space-y-3 animate-in fade-in zoom-in-95 duration-200">
                     <Input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      placeholder="Nombre del prompt"
+                      placeholder="Nombre del Prompt (ej: Estructura Pop)"
+                      className="bg-zinc-950 border-indigo-500/20 text-sm"
                       autoFocus
                     />
                     <Textarea
                       value={newContent}
                       onChange={(e) => setNewContent(e.target.value)}
-                      placeholder="Contenido del prompt (ej: [Verse], [Chorus]...)"
-                      rows={4}
+                      placeholder="Contenido..."
+                      className="bg-zinc-950 border-indigo-500/20 text-sm min-h-[80px]"
                     />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleAdd}>
-                        Guardar
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>
-                        Cancelar
-                      </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)} className="h-7 text-xs hover:bg-white/5">Cancelar</Button>
+                      <Button size="sm" onClick={handleAdd} className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700">Añadir</Button>
                     </div>
                   </div>
                 ) : (
                   <Button
                     variant="outline"
-                    className="w-full gap-2"
+                    className="w-full h-10 border-dashed border-white/10 bg-transparent text-zinc-500 hover:text-white hover:bg-white/5 hover:border-white/20"
                     onClick={() => setIsAdding(true)}
                   >
-                    <Plus className="h-4 w-4" />
-                    Nuevo prompt
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear Nuevo Prompt
                   </Button>
                 )}
               </div>
             </div>
 
             {/* Footer Credits */}
-            <div className="mt-8 pt-6 border-t border-border">
-              <div className="text-center space-y-1.5">
-                <p className="text-xs text-muted-foreground font-mono">
-                  Desarrollado por: <span className="text-primary">Sonnet 4.5</span>, <span className="text-primary">Opus 4.5</span>, <span className="text-primary">Gemini 3 PRO</span>, <span className="text-primary">Gemini 3 Flash</span>
+            <div className="pt-6 border-t border-white/5">
+              <div className="text-center space-y-2">
+                <p className="text-[10px] text-zinc-600 font-mono tracking-tight uppercase">
+                  Sonic Obsidian Design System
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Vibecodeado por: <span className="font-semibold text-foreground">@elWaiele</span>
-                </p>
-                <p className="text-xs text-muted-foreground font-mono">
-                  2026 | <span className="text-primary">imLeGEnDco.</span> × <span className="text-primary">+FlowCode</span>
-                </p>
-                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                  Hecho con ❤️ en: <span className="font-semibold">Lovable</span> & <span className="font-semibold">Antigravity</span>
-                </p>
+                <div className="flex items-center justify-center gap-4 text-xs text-zinc-500">
+                  <span>v1.2.0</span>
+                  <span className="h-3 w-px bg-white/10" />
+                  <span>Chanteos</span>
+                </div>
               </div>
             </div>
           </div>

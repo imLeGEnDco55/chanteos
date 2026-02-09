@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { importProjectFromChnt } from '@/lib/projectFile';
-import { Music, Plus, Trash2, MoreVertical, Upload } from 'lucide-react';
+import { Music, Plus, Trash2, MoreVertical, Upload, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SettingsDialog } from './SettingsDialog';
 import type { Song, PromptTemplate } from '@/types/song';
+import { cn } from '@/lib/utils';
 
 interface SongListProps {
   songs: Song[];
@@ -68,110 +69,133 @@ export function SongList({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <header className="p-4 border-b border-border bg-card">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Music className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Chanteos</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".chnt"
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
-              title="Importar Proyecto (.CHNT)"
-            >
-              <Upload className="h-4 w-4" />
-            </Button>
-            <SettingsDialog
-              prompts={prompts}
-              onAddPrompt={onAddPrompt}
-              onUpdatePrompt={onUpdatePrompt}
-              onDeletePrompt={onDeletePrompt}
-            />
-            <Button onClick={onCreateSong} size="icon" className="rounded-full">
-              <Plus className="h-5 w-5" />
-            </Button>
-          </div>
+    <div className="flex flex-col h-full bg-background text-foreground">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-zinc-950/90 backdrop-blur-md border-b border-white/5 supports-[backdrop-filter]:bg-zinc-950/60">
+        <h1 className="text-xl font-bold tracking-tight text-white">Chanteos</h1>
+        <div className="flex items-center gap-1">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".chnt"
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-zinc-400 hover:text-white"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            title="Importar"
+          >
+            <Upload className="h-5 w-5" />
+          </Button>
+
+          <SettingsDialog
+            prompts={prompts}
+            onAddPrompt={onAddPrompt}
+            onUpdatePrompt={onUpdatePrompt}
+            onDeletePrompt={onDeletePrompt}
+          />
+
+          <Button
+            onClick={onCreateSong}
+            size="icon"
+            className="ml-2 h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
         </div>
       </header>
 
-      {/* Song list */}
+      {/* Content Area */}
       <ScrollArea className="flex-1">
-        {songs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[50vh] text-center p-8">
-            <Music className="h-16 w-16 text-muted-foreground/50 mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Sin canciones aún</h2>
-            <p className="text-muted-foreground text-sm mb-4">
-              Crea tu primera canción y empieza a escribir
-            </p>
-            <Button onClick={onCreateSong} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nueva canción
-            </Button>
-          </div>
-        ) : (
-          <div className="p-4 space-y-3">
-            {songs
-              .sort((a, b) => b.updatedAt - a.updatedAt)
-              .map((song) => (
-                <Card
-                  key={song.id}
-                  className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => onSelectSong(song)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{song.title || 'Sin título'}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span>{song.lyrics.length} líneas</span>
-                        {song.audioFileName && (
-                          <span className="flex items-center gap-1">
-                            <Music className="h-3 w-3" />
-                            {song.audioFileName}
-                          </span>
+        <div className="p-4 pb-20"> {/* pb-20 for safe bottom area on mobile */}
+          {songs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+              <div className="h-20 w-20 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mb-6">
+                <Music className="h-8 w-8 text-zinc-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-white mb-2">Sin canciones aún</h2>
+              <p className="text-zinc-500 max-w-[250px] mx-auto mb-8">
+                El silencio es el lienzo. Crea tu primer proyecto para empezar a escribir.
+              </p>
+              <Button onClick={onCreateSong} className="gap-2 rounded-full px-6 bg-white text-zinc-950 hover:bg-zinc-200">
+                <Plus className="h-4 w-4" />
+                Crear Proyecto
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {songs
+                .sort((a, b) => b.updatedAt - a.updatedAt)
+                .map((song) => (
+                  <Card
+                    key={song.id}
+                    className="group relative overflow-hidden bg-zinc-900/50 hover:bg-zinc-900 border-white/5 transition-all duration-200 cursor-pointer active:scale-[0.99]"
+                    onClick={() => onSelectSong(song)}
+                  >
+                    <div className="p-4 flex items-start gap-4">
+                      {/* Icon Placeholder */}
+                      <div className={cn(
+                        "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border border-white/5",
+                        song.audioFileName ? "bg-primary/10" : "bg-zinc-800/50"
+                      )}>
+                        {song.audioFileName ? (
+                          <Music className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Mic className="h-5 w-5 text-zinc-600" />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(song.updatedAt)}
-                      </p>
-                    </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteSong(song.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </Card>
-              ))}
-          </div>
-        )}
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-semibold text-white truncate text-base pr-8">
+                            {song.title || 'Sin título'}
+                          </h3>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 -mt-1 -mr-2 text-zinc-500 hover:text-white hover:bg-white/5"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteSong(song.id);
+                                }}
+                                className="text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-1.5 ">
+                          <span className="text-xs font-medium text-zinc-500">
+                            {song.lyrics.filter(l => l.type !== 'prompt').length} líneas
+                          </span>
+                          <span className="h-1 w-1 rounded-full bg-zinc-700" />
+                          <span className="text-xs text-zinc-500">
+                            {formatDate(song.updatedAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          )}
+        </div>
       </ScrollArea>
     </div>
   );

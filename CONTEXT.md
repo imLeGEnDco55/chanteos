@@ -1,37 +1,37 @@
-# CHANTEOS CONTEXT v0.1.0
+# CHANTEOS CONTEXT v1.0.0
 
 ## ⚡ SYSTEM STATUS
-**VERSION:** 0.1.1 (Lean Prototype)
-**STATE:** 🟢 CLEANED & OPTIMIZED
+**VERSION:** 1.0.0 (Stable Release)
+**STATE:** 🟢 PRODUCTION READY
 **DEPLOY:** LOCALHOST
 
 ## 🎯 OBJECTIVE
 **NOT A NOTE-TAKING APP.**
 A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
-- **Capture:** Immediate block-based lyric entry.
-- **Structure:** Verse/Chorus/Bridge tagging.
-- **Flow:** Audio playback integration (Local).
+- **Capture:** Immediate block-based lyric entry with multi-line support.
+- **Structure:** Verse/Chorus/Bridge tagging + Prompt Library.
+- **Flow:** Integrated Audio playback + Auto-Timestamping.
 
 ## 🛠️ TECHNICAL STACK
 - **Runtime:** Vite + React 18
 - **Language:** TypeScript (Strict)
-- **Styling:** Tailwind CSS + Shadcn Elements
-- **Data:** Local Storage / JSON Export
-- **Audio:** Browser Audio API
+- **Styling:** Tailwind CSS + Shadcn Elements + Lucide Icons
+- **Data:** Local Storage / JSON Export (.CHNT) / Text Export (.TXT)
+- **Audio:** Browser Audio API (WAV/MP3)
 
-## 🧩 MODULES STATUS (v0.1.0)
+## 🧩 MODULES STATUS (v1.0.0)
 | MODULE | STATUS | DESCRIPTION |
 | :--- | :--- | :--- |
-| **LYRIC ENGINE** | 🟢 ACTIVE | Block-based editor with timestamps. |
-| **AUDIO VAULT** | 🟡 PARTIAL | Playback implemented. Local file only. |
-| **PROMPT INJ** | 🟢 ACTIVE | Creative obstruction library. |
-| **IMP/EXP** | 🟢 ACTIVE | JSON Data portability. |
+| **LYRIC ENGINE** | 🟢 STABLE | Multi-line input, auto-height, timestamp tagging. |
+| **AUDIO VAULT** | 🟢 STABLE | Playback, seeking, speed control, loop. |
+| **PROMPT INJ** | 🟢 STABLE | Creative obstruction library & randomizer. |
+| **IMP/EXP** | 🟢 STABLE | Full project JSON + Pure text export. |
+| **MOBILE UX** | 🟢 OPTIMIZED | Touch-friendly, virtual keyboard aware, auto-focus flow. |
 
 ## ⚠️ KNOWN ANOMALIES
-- **Mobile View:** Layout shifts on small screens.
-- **Audio Persist:** Refreshes clear loaded audio (Browser limitation).
+- **Audio Persist:** Refreshes clear loaded audio (Browser limitation). (Future: IndexedDB)
 
-## 📋 NEXT CYCLES
-1.  **Refine UI:** Cruel optimization of screen real estate.
-2.  **Audio Vis:** Waveform rendering for precision.
-3.  **Local Persist:** IndexedDB implementation for audio safety.
+## 📋 NEXT CYCLES (Post-v1.0)
+1.  **Local Persist:** IndexedDB implementation for audio safety across reloads.
+2.  **Cloud Sync:** Optional backend for cross-device access.
+3.  **Audio Vis:** Waveform rendering for precision seeking.
