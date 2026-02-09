@@ -109,6 +109,7 @@ export function PromptLibraryDialog({
                           onClick={() => handleInsert(prompt)}
                           className="h-8 w-8"
                           title="Insertar en letras"
+                          aria-label="Copiar prompt"
                         >
                           {copiedId === prompt.id ? (
                             <Check className="h-4 w-4 text-primary" />
@@ -122,6 +123,7 @@ export function PromptLibraryDialog({
                             size="icon"
                             onClick={() => onDeletePrompt(prompt.id)}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            aria-label="Eliminar prompt"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

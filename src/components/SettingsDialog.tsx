@@ -239,6 +239,7 @@ export function SettingsDialog({
                             size="icon"
                             onClick={() => onDeletePrompt(prompt.id)}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            aria-label="Eliminar prompt"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

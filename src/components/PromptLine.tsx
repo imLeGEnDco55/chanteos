@@ -46,6 +46,7 @@ export const PromptLine = memo(function PromptLine({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder="[Verse], [Chorus], instrucciones..."
+        aria-label="Contenido del prompt"
         className={cn(
           "flex-1 h-auto py-1 bg-transparent border-none focus-visible:ring-1 italic text-accent text-center"
         )}
@@ -59,6 +60,7 @@ export const PromptLine = memo(function PromptLine({
             size="icon"
             onClick={() => onDelete(index)}
             className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
+            aria-label="Eliminar prompt"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
