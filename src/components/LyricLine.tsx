@@ -105,7 +105,7 @@ export const LyricLine = memo(function LyricLine({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 py-2 px-3 transition-colors",
+        "flex items-center gap-2 py-1 px-3 transition-colors",
         isFocused && "bg-accent/30",
         isActive && !isFocused && "bg-primary/10"
       )}
@@ -144,7 +144,7 @@ export const LyricLine = memo(function LyricLine({
         onDoubleClick={handleDoubleClick}
         placeholder="Escribe aquí..."
         className={cn(
-          "flex-1 text-center h-auto py-1 bg-transparent border-none focus-visible:ring-1",
+          "flex-1 text-center h-auto py-0 bg-transparent border-none focus-visible:ring-1",
           isActive && "text-foreground font-medium"
         )}
       />
