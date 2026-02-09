@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, memo } from 'react';
-import { Input } from '@/components/ui/input';
+import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { updateLineText } from '@/hooks/useSongs';
 import type { LyricLine as LyricLineType } from '@/types/song';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,7 @@ export const LyricLine = memo(function LyricLine({
   isActive = false,
 }: LyricLineProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -44,12 +44,8 @@ export const LyricLine = memo(function LyricLine({
     onBlur?.(index);
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(index, updateLineText(line, e.target.value));
-  };
-
   // Handle Enter (or Shift+Enter) for new line insertion
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       onInsertLine?.(index);
@@ -60,8 +56,8 @@ export const LyricLine = memo(function LyricLine({
   const handleSelect = useCallback(() => {
     if (!inputRef.current || !onWordSelect) return;
 
-    const start = inputRef.current.selectionStart || 0;
-    const end = inputRef.current.selectionEnd || 0;
+    const start = inputRef.current.selectionStart;
+    const end = inputRef.current.selectionEnd;
 
     if (start !== end) {
       // There's a selection - extract the selected text
@@ -119,18 +115,18 @@ export const LyricLine = memo(function LyricLine({
       </div>
 
       {/* Texto de la letra (Centro) */}
-      <Input
+      <TextareaAutosize
         ref={inputRef}
-        type="text"
         value={line.text}
-        onChange={handleTextChange}
+        onChange={(e) => onUpdate(index, updateLineText(line, e.target.value))}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
         onDoubleClick={handleDoubleClick}
         placeholder="Escribe aquí..."
+        minRows={1}
         className={cn(
-          "flex-1 text-center h-auto py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm",
+          "flex-1 text-center py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm resize-none overflow-hidden outline-none",
           isActive && "text-foreground font-medium"
         )}
       />

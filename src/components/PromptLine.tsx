@@ -1,5 +1,5 @@
-import { useState, memo } from 'react';
-import { Input } from '@/components/ui/input';
+import { useState, memo, useRef } from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
 import { Trash2, FileText } from 'lucide-react';
 import type { LyricLine as LyricLineType } from '@/types/song';
@@ -11,6 +11,7 @@ interface PromptLineProps {
   onUpdate: (index: number, line: LyricLineType) => void;
   onDelete: (index: number) => void;
   canDelete: boolean;
+  onInsertLine?: (index: number) => void; // Need to add this prop if we want Enter to work
 }
 
 export const PromptLine = memo(function PromptLine({
@@ -19,17 +20,26 @@ export const PromptLine = memo(function PromptLine({
   onUpdate,
   onDelete,
   canDelete,
+  onInsertLine,
 }: PromptLineProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onUpdate(index, { ...line, text: e.target.value });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onInsertLine?.(index);
+    }
   };
 
   return (
     <div
       className={cn(
-        "flex items-center gap-2 py-1 px-3 transition-colors bg-accent/20 border-l-2 border-accent",
+        "flex items-center gap-1 py-1 px-1 transition-colors bg-accent/20 border-l-2 border-accent",
         isFocused && "bg-accent/40"
       )}
     >
@@ -39,15 +49,17 @@ export const PromptLine = memo(function PromptLine({
       </div>
 
       {/* Prompt text (full width, no syllable count) */}
-      <Input
-        type="text"
+      <TextareaAutosize
+        ref={inputRef}
         value={line.text}
         onChange={handleTextChange}
+        onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder="[Verse], [Chorus]..."
+        minRows={1}
         className={cn(
-          "flex-1 h-auto py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm italic text-accent text-center placeholder:text-accent/30"
+          "flex-1 py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm italic text-accent text-center placeholder:text-accent/30 resize-none overflow-hidden outline-none h-auto"
         )}
       />
 

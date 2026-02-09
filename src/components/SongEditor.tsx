@@ -301,6 +301,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
                     onUpdate={handleUpdateLine}
                     onDelete={handleDeleteLine}
                     canDelete={song.lyrics.length > 1}
+                    onInsertLine={handleInsertLine}
                   />
                 ) : (
                   <LyricLine
