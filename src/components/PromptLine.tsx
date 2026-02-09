@@ -1,5 +1,6 @@
 import { useState, memo, useRef, useEffect } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
+import { Button } from '@/components/ui/button';
 import { Trash2, FileText } from 'lucide-react';
 import type { LyricLine as LyricLineType } from '@/types/song';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ export const PromptLine = memo(function PromptLine({
   useEffect(() => {
     if (shouldFocus && inputRef.current) {
       inputRef.current.focus();
+      // Ensure cursor is at the end if there's text
       inputRef.current.setSelectionRange(
         inputRef.current.value.length,
         inputRef.current.value.length
@@ -44,29 +46,27 @@ export const PromptLine = memo(function PromptLine({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       if (!e.shiftKey) {
+        // Enter WITHOUT Shift -> New Block
         e.preventDefault();
         onInsertLine?.(index);
       }
+      // Enter WITH Shift -> Default behavior (Newline)
     }
   };
 
   return (
     <div
       className={cn(
-        "flex items-center gap-1 py-1.5 px-2 transition-all duration-300 rounded-lg group mt-6 mb-2",
-        "bg-violet-500/5 border-l-2 border-violet-500/30",
-        isFocused && "bg-violet-500/10 border-violet-500 scale-[1.01] z-10 shadow-lg shadow-violet-900/10"
+        "flex items-center gap-1 py-1 px-1 transition-colors bg-accent/20 border-l-2 border-accent",
+        isFocused && "bg-accent/40"
       )}
     >
-      {/* Icon Indicator */}
-      <div className="flex items-center justify-start min-w-[40px]">
-        <FileText className={cn(
-          "h-4 w-4 transition-colors duration-300",
-          isFocused ? "text-violet-400" : "text-violet-500/40 group-hover:text-violet-400"
-        )} />
+      {/* Prompt icon indicator (Ala izquierda) */}
+      <div className="flex items-center justify-start min-w-[32px] pl-1">
+        <FileText className="h-3 w-3 text-accent/70" />
       </div>
 
-      {/* Prompt Text */}
+      {/* Prompt text (full width, no syllable count) */}
       <TextareaAutosize
         ref={inputRef}
         value={line.text}
@@ -74,26 +74,25 @@ export const PromptLine = memo(function PromptLine({
         onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder="[Verse], [Chorus], [Intro]..."
+        placeholder="[Verse], [Chorus]..."
         minRows={1}
         className={cn(
-          "flex-1 py-1 px-2 bg-transparent border-none focus-visible:ring-0 rounded-md italic text-center placeholder:text-violet-500/20 resize-none overflow-hidden outline-none transition-all",
-          "text-violet-300 font-medium text-sm tracking-wide uppercase",
-          isFocused && "text-violet-200"
+          "flex-1 py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm italic text-accent text-center placeholder:text-accent/30 resize-none overflow-hidden outline-none h-auto"
         )}
       />
 
-      {/* Delete Action */}
-      <div className="flex items-center justify-end min-w-[32px]">
+      {/* Delete button (Ala derecha) */}
+      <div className="flex items-center justify-end min-w-[24px] pr-1">
         {canDelete && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onDelete(index)}
-            className="flex items-center justify-center h-6 w-6 rounded-full text-violet-500/30 hover:text-red-400 hover:bg-red-400/10 transition-all opacity-0 group-hover:opacity-100"
-            title="Borrar bloque estructural"
+            className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-transparent"
+            title="Borrar prompt"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+            <Trash2 className="h-3 w-3" />
+          </Button>
         )}
       </div>
     </div>
