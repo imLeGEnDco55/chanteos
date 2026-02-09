@@ -309,7 +309,6 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
                     onUpdate={handleUpdateLine}
                     onDelete={handleDeleteLine}
                     onInsertLine={handleInsertLine}
-                    onMarkTimestamp={handleMarkTimestamp}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     onWordSelect={handleWordSelect}

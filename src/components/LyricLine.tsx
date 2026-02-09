@@ -12,7 +12,6 @@ interface LyricLineProps {
   onUpdate: (index: number, line: LyricLineType) => void;
   onDelete: (index: number) => void;
   onInsertLine?: (index: number) => void;
-  onMarkTimestamp: (index: number) => void;
   onFocus?: (index: number) => void;
   onBlur?: (index: number) => void;
   onWordSelect?: (word: string) => void;
@@ -26,7 +25,6 @@ export const LyricLine = memo(function LyricLine({
   onUpdate,
   onDelete,
   onInsertLine,
-  onMarkTimestamp,
   onFocus,
   onBlur,
   onWordSelect,
@@ -105,28 +103,16 @@ export const LyricLine = memo(function LyricLine({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 py-1 px-3 transition-colors",
+        "flex items-center gap-1 py-1 px-1 transition-colors", // Reduced padding/gap
         isFocused && "bg-accent/30",
         isActive && !isFocused && "bg-primary/10"
       )}
     >
       {/* Timestamp (Ala izquierda) */}
-      <div className="flex items-center gap-1 min-w-[60px]">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onMarkTimestamp(index)}
-          className={cn(
-            "h-6 w-6 hover:text-primary",
-            isActive ? "text-accent" : "text-muted-foreground"
-          )}
-          title="Marcar tiempo actual"
-        >
-          <Clock className="h-3 w-3" />
-        </Button>
+      <div className="flex items-center justify-start min-w-[32px] pl-1">
         <span className={cn(
-          "text-xs font-mono min-w-[35px]",
-          isActive ? "text-accent font-medium" : "text-muted-foreground"
+          "text-[10px] font-mono leading-none select-none",
+          isActive ? "text-accent font-medium" : "text-muted-foreground opacity-70"
         )}>
           {line.timestamp || '00:00'}
         </span>
@@ -144,16 +130,16 @@ export const LyricLine = memo(function LyricLine({
         onDoubleClick={handleDoubleClick}
         placeholder="Escribe aquí..."
         className={cn(
-          "flex-1 text-center h-auto py-0 bg-transparent border-none focus-visible:ring-1",
+          "flex-1 text-center h-auto py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm",
           isActive && "text-foreground font-medium"
         )}
       />
 
       {/* Contador de sílabas (Ala derecha) */}
-      <div className="flex items-center gap-1 min-w-[40px] justify-end">
+      <div className="flex items-center justify-end min-w-[24px] pr-1">
         <span className={cn(
-          "text-sm font-mono",
-          isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground"
+          "text-[10px] font-mono leading-none select-none",
+          isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground opacity-50"
         )}>
           {line.syllableCount}
         </span>
@@ -163,12 +149,14 @@ export const LyricLine = memo(function LyricLine({
             variant="ghost"
             size="icon"
             onClick={() => onDelete(index)}
-            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity absolute right-0"
+            style={{ display: isFocused ? 'flex' : 'none' }} // Only show on focus/hover logic if needed, but for now absolute might overlap
           >
             <Trash2 className="h-3 w-3" />
           </Button>
         )}
       </div>
+
     </div>
   );
 });
