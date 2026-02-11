@@ -11,6 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { SettingsDialog } from './SettingsDialog';
 import type { Song, PromptTemplate } from '@/types/song';
 
@@ -39,6 +47,7 @@ export function SongList({
 }: SongListProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [songToDelete, setSongToDelete] = useState<Song | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,6 +100,7 @@ export function SongList({
               onClick={() => fileInputRef.current?.click()}
               disabled={isImporting}
               title="Importar Proyecto (.CHNT)"
+              aria-label="Importar proyecto"
             >
               <Upload className="h-4 w-4" />
             </Button>
@@ -100,7 +110,12 @@ export function SongList({
               onUpdatePrompt={onUpdatePrompt}
               onDeletePrompt={onDeletePrompt}
             />
-            <Button onClick={onCreateSong} size="icon" className="rounded-full">
+            <Button
+              onClick={onCreateSong}
+              size="icon"
+              className="rounded-full"
+              aria-label="Crear nueva canción"
+            >
               <Plus className="h-5 w-5" />
             </Button>
           </div>
@@ -150,7 +165,12 @@ export function SongList({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label="Opciones de canción"
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -158,7 +178,7 @@ export function SongList({
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDeleteSong(song.id);
+                            setSongToDelete(song);
                           }}
                           className="text-destructive focus:text-destructive"
                         >
@@ -173,6 +193,31 @@ export function SongList({
           </div>
         )}
       </ScrollArea>
+
+      <Dialog open={!!songToDelete} onOpenChange={(open) => !open && setSongToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar canción?</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Se eliminará "{songToDelete?.title || 'Sin título'}" permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSongToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (songToDelete) onDeleteSong(songToDelete.id);
+                setSongToDelete(null);
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
