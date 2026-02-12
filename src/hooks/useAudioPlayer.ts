@@ -164,6 +164,14 @@ export function useAudioPlayer(audioData: string | null) {
     });
   }, []);
 
+  // Direct reset to off (for long-press)
+  const resetLoop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setState(prev => ({ ...prev, loopState: 'off' as LoopState, loopPointA: null, loopPointB: null, isPlaying: false }));
+  }, []);
+
   // Legacy toggle for compatibility (now just cycles)
   const toggleLoop = useCallback(() => {
     cycleLoopState();
@@ -185,6 +193,7 @@ export function useAudioPlayer(audioData: string | null) {
     cyclePlaybackRate,
     toggleLoop,
     cycleLoopState,
+    resetLoop,
     getCurrentTime,
     hasAudio: !!audioData,
   };
