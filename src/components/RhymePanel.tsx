@@ -25,68 +25,96 @@ export function RhymePanel({
 }: RhymePanelProps) {
   if (!isVisible) return null;
 
+  const hasResults = rhymes.length > 0 || related.length > 0;
+
   return (
     <ScrollArea className="h-full w-full">
-      <div className="flex flex-col gap-1.5 p-2 pt-3">
+      <div className="flex h-full flex-col gap-3 p-3">
         {/* Loading state */}
         {isLoading && (
-          <div className="flex items-center justify-center py-4">
-            <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+          <div className="flex items-center justify-center rounded-lg border border-primary-foreground/20 bg-primary-foreground/5 py-6">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/80 border-t-transparent" />
           </div>
         )}
 
         {/* Error state */}
         {error && !isLoading && (
-          <div className="text-center py-2 text-primary-foreground/80 text-xs">
-            {error}
+          <div className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/15 p-2.5 text-center">
+            <div className="text-xs text-primary-foreground/90">{error}</div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onRetry}
+              className="h-7 w-full border-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
           </div>
         )}
 
         {/* No word selected */}
         {!selectedWord && !isLoading && !error && (
-          <div className="text-center py-3 text-primary-foreground/60 text-xs leading-tight">
+          <div className="rounded-lg border border-primary-foreground/15 bg-primary-foreground/5 py-3 text-center text-xs leading-tight text-primary-foreground/60">
             Selecciona una palabra
           </div>
         )}
 
         {/* Rhyme suggestions */}
-        {selectedWord && !isLoading && (rhymes.length > 0 || related.length > 0) && (
+        {selectedWord && !isLoading && hasResults && (
           <>
-            {rhymes.map((word, index) => (
-              <Button
-                key={`rhyme-${index}`}
-                variant="secondary"
-                size="sm"
-                onClick={() => onWordClick(word)}
-                className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0 text-xs px-2 py-1.5 h-auto w-full justify-center"
-              >
-                {word}
-              </Button>
-            ))}
+            <div className="rounded-lg border border-primary-foreground/15 bg-primary-foreground/5 p-2">
+              <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground/70">
+                Rimas
+              </div>
+              <div className="scrollbar-hide overflow-x-auto">
+                <div className="flex min-w-max gap-1.5 pb-0.5">
+                  {rhymes.map((word, index) => (
+                    <Button
+                      key={`rhyme-${index}`}
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onWordClick(word)}
+                      className="h-7 border-0 bg-primary-foreground/20 px-3 text-xs text-primary-foreground hover:bg-primary-foreground/30"
+                    >
+                      {word}
+                    </Button>
+                  ))}
+                  {rhymes.length === 0 && (
+                    <span className="px-2 text-xs text-primary-foreground/55">Sin rimas directas</span>
+                  )}
+                </div>
+              </div>
+            </div>
 
-            {/* Separator */}
-            {rhymes.length > 0 && related.length > 0 && (
-              <div className="border-t border-primary-foreground/20 my-1" />
-            )}
+            <div className="rounded-lg border border-primary-foreground/15 bg-primary-foreground/5 p-2">
+              <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground/70">
+                Contexto
+              </div>
+              <div className="scrollbar-hide overflow-x-auto">
+                <div className="flex min-w-max gap-1.5 pb-0.5">
+                  {related.map((word, index) => (
+                    <Button
+                      key={`related-${index}`}
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onWordClick(word)}
+                      className="h-7 border-0 bg-accent/85 px-3 text-xs text-accent-foreground hover:bg-accent"
+                    >
+                      {word}
+                    </Button>
+                  ))}
+                  {related.length === 0 && (
+                    <span className="px-2 text-xs text-primary-foreground/55">Sin relacionadas</span>
+                  )}
+                </div>
+              </div>
+            </div>
 
-            {related.map((word, index) => (
-              <Button
-                key={`related-${index}`}
-                variant="secondary"
-                size="sm"
-                onClick={() => onWordClick(word)}
-                className="bg-accent/80 hover:bg-accent text-accent-foreground border-0 text-xs px-2 py-1.5 h-auto w-full justify-center"
-              >
-                {word}
-              </Button>
-            ))}
-
-            {/* Retry */}
             <Button
               variant="secondary"
               size="sm"
               onClick={onRetry}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-0 px-2 py-1.5 h-auto w-full justify-center mt-1"
+              className="h-8 w-full border-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
@@ -94,8 +122,8 @@ export function RhymePanel({
         )}
 
         {/* No results */}
-        {selectedWord && !isLoading && !error && rhymes.length === 0 && related.length === 0 && (
-          <div className="text-center py-2 text-primary-foreground/60 text-xs leading-tight">
+        {selectedWord && !isLoading && !error && !hasResults && (
+          <div className="rounded-lg border border-primary-foreground/15 bg-primary-foreground/5 py-3 text-center text-xs leading-tight text-primary-foreground/60">
             Sin resultados para "{selectedWord}"
           </div>
         )}

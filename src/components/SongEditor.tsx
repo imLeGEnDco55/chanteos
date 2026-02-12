@@ -227,9 +227,9 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const lyricLineCount = song.lyrics.filter(line => line.type !== 'prompt').length;
 
   return (
-    <div className="flex flex-col h-full w-full bg-background overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="flex items-center gap-2 p-3 border-b border-border bg-card">
+      <header className="flex items-center gap-2 border-b border-border/80 bg-card/95 p-3 backdrop-blur">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -239,7 +239,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
             type="text"
             value={song.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            className="text-lg font-bold bg-transparent border-none focus-visible:ring-1 px-0 text-center"
+            className="border-none bg-transparent px-0 text-center text-lg font-bold focus-visible:ring-1"
             placeholder="Título de la canción"
           />
           {song.audioFileName && (
@@ -273,14 +273,14 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       </header>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         {showNotes ? (
           <div className="p-4 pb-40">
             <Textarea
               value={song.notes}
               onChange={(e) => onUpdate({ notes: e.target.value })}
               placeholder="Notas sobre la canción..."
-              className="min-h-[200px] resize-none"
+              className="min-h-[200px] resize-none rounded-xl border-border/70 bg-card/70"
             />
           </div>
         ) : (
@@ -323,11 +323,11 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
             ))}
 
             {/* Add line buttons */}
-            <div className="flex gap-2 px-3 mt-2">
+            <div className="mt-3 flex gap-2 px-3">
               <Button
                 variant="ghost"
                 onClick={handleAddLine}
-                className="flex-1 gap-2 text-muted-foreground hover:text-foreground"
+                className="flex-1 gap-2 rounded-lg border border-border/60 bg-card/50 text-muted-foreground hover:bg-card hover:text-foreground"
               >
                 <Plus className="h-4 w-4" />
                 Línea
@@ -335,7 +335,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
               <Button
                 variant="ghost"
                 onClick={handleAddPromptLine}
-                className="flex-1 gap-2 text-accent hover:text-accent/80"
+                className="flex-1 gap-2 rounded-lg border border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent"
               >
                 <FileText className="h-4 w-4" />
                 Prompt
@@ -343,7 +343,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
             </div>
 
             {/* Stats */}
-            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span>{lyricLineCount} líneas</span>
               <span>•</span>
               <span>{totalSyllables} sílabas</span>

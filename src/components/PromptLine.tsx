@@ -57,7 +57,7 @@ export const PromptLine = memo(function PromptLine({
   return (
     <div
       className={cn(
-        "flex items-center gap-1 py-1 px-1 transition-colors bg-accent/20 border-l-2 border-accent",
+        "flex min-h-8 items-center gap-1 border-l-2 border-accent bg-accent/20 px-1 py-1 transition-colors",
         isFocused && "bg-accent/40"
       )}
     >
@@ -77,7 +77,7 @@ export const PromptLine = memo(function PromptLine({
         placeholder="[Verse], [Chorus]..."
         minRows={1}
         className={cn(
-          "flex-1 py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm italic text-accent text-center placeholder:text-accent/30 resize-none overflow-hidden outline-none h-auto"
+          "h-auto min-h-6 flex-1 resize-none overflow-hidden rounded-sm border-none bg-transparent px-1 py-0 text-center text-base italic leading-6 text-accent outline-none placeholder:text-accent/30 focus:bg-background/20 focus-visible:ring-0"
         )}
       />
 

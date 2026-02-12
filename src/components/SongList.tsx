@@ -68,13 +68,17 @@ export function SongList({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <header className="p-4 border-b border-border bg-card">
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <header className="border-b border-border/80 bg-card/95 p-4 backdrop-blur">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Music className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Chanteos</h1>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15">
+              <Music className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Chanteos</h1>
+              <p className="text-xs text-muted-foreground">Sonic Workspace</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -107,34 +111,35 @@ export function SongList({
         </div>
       </header>
 
-      {/* Song list */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         {songs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[50vh] text-center p-8">
-            <Music className="h-16 w-16 text-muted-foreground/50 mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Sin canciones aún</h2>
-            <p className="text-muted-foreground text-sm mb-4">
+          <div className="flex h-[50vh] flex-col items-center justify-center p-8 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/70 bg-card">
+              <Music className="h-8 w-8 text-muted-foreground/60" />
+            </div>
+            <h2 className="mb-2 text-lg font-semibold">Sin canciones aún</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
               Crea tu primera canción y empieza a escribir
             </p>
-            <Button onClick={onCreateSong} className="gap-2">
+            <Button onClick={onCreateSong} className="gap-2 rounded-full px-5">
               <Plus className="h-4 w-4" />
               Nueva canción
             </Button>
           </div>
         ) : (
-          <div className="p-4 space-y-3">
+          <div className="space-y-3 p-4">
             {songs
               .sort((a, b) => b.updatedAt - a.updatedAt)
               .map((song) => (
                 <Card
                   key={song.id}
-                  className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                  className="cursor-pointer border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
                   onClick={() => onSelectSong(song)}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{song.title || 'Sin título'}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold">{song.title || 'Sin título'}</h3>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                         <span>{song.lyrics.length} líneas</span>
                         {song.audioFileName && (
                           <span className="flex items-center gap-1">
@@ -143,9 +148,7 @@ export function SongList({
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(song.updatedAt)}
-                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatDate(song.updatedAt)}</p>
                     </div>
 
                     <DropdownMenu>
@@ -162,7 +165,7 @@ export function SongList({
                           }}
                           className="text-destructive focus:text-destructive"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>

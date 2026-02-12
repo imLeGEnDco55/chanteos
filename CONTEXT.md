@@ -35,3 +35,12 @@ A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
 1.  **Refine UI:** Cruel optimization of screen real estate.
 2.  **Audio Vis:** Waveform rendering for precision.
 3.  **Local Persist:** IndexedDB implementation for audio safety.
+
+## UI REFRESH v0.1.2
+- Scope: Visual refresh across list, editor, player, and rhyme panel. No functional behavior changes.
+- Regression locks:
+  - LyricLine and PromptLine now use strict visual height constraints to prevent accidental input height drift.
+  - Audio player remains anchored in layout flow, outside scroll area, with keyboard-aware bottom offset on mobile.
+- Rhyme panel:
+  - Full slide-in/out coverage for panel width.
+  - Dual horizontal lanes: Rhymes (top) and Context/Related (bottom), both horizontally scrollable.

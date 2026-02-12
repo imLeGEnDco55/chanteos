@@ -117,7 +117,7 @@ export const LyricLine = memo(function LyricLine({
   return (
     <div
       className={cn(
-        "flex items-center gap-1 py-1 px-1 transition-colors", // Reduced padding/gap
+        "flex min-h-8 items-center gap-1 px-1 py-1 transition-colors",
         isFocused && "bg-accent/30",
         isActive && !isFocused && "bg-primary/10"
       )}
@@ -144,7 +144,7 @@ export const LyricLine = memo(function LyricLine({
         placeholder="Escribe aquí..."
         minRows={1}
         className={cn(
-          "flex-1 text-center py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm resize-none overflow-hidden outline-none",
+          "min-h-6 flex-1 resize-none overflow-hidden rounded-sm border-none bg-transparent px-1 py-0 text-center text-base leading-6 outline-none focus:bg-background/20 focus-visible:ring-0",
           isActive && "text-foreground font-medium"
         )}
       />
