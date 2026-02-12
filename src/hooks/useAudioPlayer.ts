@@ -87,17 +87,26 @@ export function useAudioPlayer(audioData: string | null) {
   }, []);
 
   const togglePlay = useCallback(() => {
-    if (state.isPlaying) {
-      pause();
-    } else {
-      // Cue behavior: if point A is set, always return to A on play
-      if (state.loopPointA !== null && audioRef.current) {
+    if (state.loopState === 'point-a' && state.loopPointA !== null && audioRef.current) {
+      // Cue mode: always restart from A, no pause
+      audioRef.current.currentTime = state.loopPointA;
+      setState(prev => ({ ...prev, currentTime: state.loopPointA! }));
+      play();
+    } else if (state.loopState === 'loop-ab' && state.loopPointA !== null && audioRef.current) {
+      // Loop A-B: pause works, but unpause always restarts from A
+      if (state.isPlaying) {
+        pause();
+      } else {
         audioRef.current.currentTime = state.loopPointA;
         setState(prev => ({ ...prev, currentTime: state.loopPointA! }));
+        play();
       }
+    } else if (state.isPlaying) {
+      pause();
+    } else {
       play();
     }
-  }, [state.isPlaying, state.loopPointA, state.loopState, play, pause]);
+  }, [state.isPlaying, state.loopState, state.loopPointA, play, pause]);
 
   const seek = useCallback((time: number) => {
     if (audioRef.current) {
