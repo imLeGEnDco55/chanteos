@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,7 +14,11 @@ interface RhymePanelProps {
   onRetry: () => void;
 }
 
-export function RhymePanel({
+/**
+ * Memoized to prevent re-renders when parent AudioPlayer re-renders on time updates.
+ * Props (rhymes, related, callbacks) are stable.
+ */
+export const RhymePanel = memo(function RhymePanel({
   isVisible,
   selectedWord,
   rhymes,
@@ -130,4 +135,4 @@ export function RhymePanel({
       </div>
     </ScrollArea>
   );
-}
+});

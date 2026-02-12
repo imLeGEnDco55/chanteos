@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { generateRhymes } from '@/lib/gemini';
 import { useSettings } from '@/hooks/useSettings';
 import { toast } from 'sonner';
@@ -61,7 +61,8 @@ export function useRhymeSuggestions() {
     setError(null);
   }, []);
 
-  return {
+  // Memoize return value to ensure reference stability for consumers
+  return useMemo(() => ({
     suggestions,
     isLoading,
     error,
@@ -69,5 +70,13 @@ export function useRhymeSuggestions() {
     fetchSuggestions,
     retry,
     clearSuggestions
-  };
+  }), [
+    suggestions,
+    isLoading,
+    error,
+    selectedWord,
+    fetchSuggestions,
+    retry,
+    clearSuggestions
+  ]);
 }
