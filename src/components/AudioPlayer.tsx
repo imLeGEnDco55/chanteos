@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useCallback } from 'react';
 import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -22,6 +22,7 @@ interface AudioPlayerProps {
   onSeek: (time: number) => void;
   onCyclePlaybackRate: () => void;
   onCycleLoopState: () => void;
+  onResetLoop?: () => void;
   onLoadAudio: () => void;
   onSkipBack?: () => void;
   onSkipForward?: () => void;
@@ -55,6 +56,7 @@ export function AudioPlayer({
   onSeek,
   onCyclePlaybackRate,
   onCycleLoopState,
+  onResetLoop,
   onLoadAudio,
   onSkipBack,
   onSkipForward,
@@ -75,6 +77,35 @@ export function AudioPlayer({
   const keyboardHeight = useKeyboardHeight();
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const panelWidth = 'min(420px, 84vw)';
+
+  // Long-press handler for loop button reset
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
+
+  const handleLoopPointerDown = useCallback(() => {
+    didLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
+      onResetLoop?.();
+    }, 500);
+  }, [onResetLoop]);
+
+  const handleLoopPointerUp = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (!didLongPress.current) {
+      onCycleLoopState();
+    }
+  }, [onCycleLoopState]);
+
+  const handleLoopPointerLeave = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   if (!hasAudio) {
     return (
@@ -203,21 +234,23 @@ export function AudioPlayer({
             <span className="absolute text-[10px] font-bold">3</span>
           </Button>
 
-          {/* Loop A-B with color states */}
+          {/* Loop A-B with color states — long press to reset */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={onCycleLoopState}
+            onPointerDown={handleLoopPointerDown}
+            onPointerUp={handleLoopPointerUp}
+            onPointerLeave={handleLoopPointerLeave}
             className={cn(
-              "h-10 w-10 hover:bg-primary-foreground/20 transition-colors",
+              "h-10 w-10 hover:bg-primary-foreground/20 transition-colors select-none",
               loopState === 'off' && "text-primary-foreground",
               loopState === 'point-a' && "text-yellow-400 bg-primary-foreground/10",
               loopState === 'loop-ab' && "text-green-400 bg-primary-foreground/20"
             )}
             title={
               loopState === 'off' ? 'Establecer punto A' :
-                loopState === 'point-a' ? 'Establecer punto B' :
-                  'Desactivar loop'
+                loopState === 'point-a' ? 'Establecer punto B (mantener: reset)' :
+                  'Desactivar loop (mantener: reset)'
             }
             aria-label={
               loopState === 'off' ? 'Establecer punto A de bucle' :

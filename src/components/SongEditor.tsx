@@ -388,6 +388,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         onSeek={player.seek}
         onCyclePlaybackRate={player.cyclePlaybackRate}
         onCycleLoopState={player.cycleLoopState}
+        onResetLoop={player.resetLoop}
         onLoadAudio={handleLoadAudio}
         onSkipBack={player.skipBack}
         onSkipForward={player.skipForward}
