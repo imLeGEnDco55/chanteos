@@ -90,6 +90,7 @@ export const PromptLine = memo(function PromptLine({
             onClick={() => onDelete(index)}
             className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-transparent"
             title="Borrar prompt"
+            aria-label="Borrar línea de prompt"
           >
             <Trash2 className="h-3 w-3" />
           </Button>

@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SettingsDialog } from './SettingsDialog';
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import type { Song, PromptTemplate } from '@/types/song';
 
 interface SongListProps {
@@ -39,6 +40,7 @@ export function SongList({
 }: SongListProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [songToDelete, setSongToDelete] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,6 +59,13 @@ export function SongList({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (songToDelete) {
+      onDeleteSong(songToDelete);
+      setSongToDelete(null);
     }
   };
 
@@ -104,7 +113,12 @@ export function SongList({
               onUpdatePrompt={onUpdatePrompt}
               onDeletePrompt={onDeletePrompt}
             />
-            <Button onClick={onCreateSong} size="icon" className="rounded-full">
+            <Button
+              onClick={onCreateSong}
+              size="icon"
+              className="rounded-full"
+              aria-label="Crear nueva canción"
+            >
               <Plus className="h-5 w-5" />
             </Button>
           </div>
@@ -161,7 +175,7 @@ export function SongList({
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDeleteSong(song.id);
+                            setSongToDelete(song.id);
                           }}
                           className="text-destructive focus:text-destructive"
                         >
@@ -176,6 +190,12 @@ export function SongList({
           </div>
         )}
       </ScrollArea>
+
+      <DeleteConfirmationDialog
+        open={!!songToDelete}
+        onOpenChange={(open) => !open && setSongToDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

@@ -93,7 +93,7 @@ export function PromptLibraryDialog({
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <h4 
+                      <h4
                         className={cn(
                           "font-medium",
                           !insertOnly && "cursor-pointer hover:text-primary"
@@ -109,6 +109,7 @@ export function PromptLibraryDialog({
                           onClick={() => handleInsert(prompt)}
                           className="h-8 w-8"
                           title="Insertar en letras"
+                          aria-label={`Insertar prompt: ${prompt.name}`}
                         >
                           {copiedId === prompt.id ? (
                             <Check className="h-4 w-4 text-primary" />
@@ -122,13 +123,14 @@ export function PromptLibraryDialog({
                             size="icon"
                             onClick={() => onDeletePrompt(prompt.id)}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            aria-label={`Borrar prompt: ${prompt.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
                     </div>
-                    <pre 
+                    <pre
                       className={cn(
                         "text-sm text-muted-foreground whitespace-pre-wrap font-mono bg-muted/50 p-2 rounded",
                         !insertOnly && "cursor-pointer hover:bg-muted"

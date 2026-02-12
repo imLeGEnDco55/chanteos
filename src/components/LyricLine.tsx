@@ -151,17 +151,18 @@ export const LyricLine = memo(function LyricLine({
 
       {/* Contador de sílabas (Ala derecha) */}
       <div className="flex items-center justify-end min-w-[24px] pr-1">
-        <span
+        <button
           onClick={() => canDelete && onDelete(index)}
           className={cn(
-            "text-[10px] font-mono leading-none select-none transition-colors",
+            "flex h-6 w-6 items-center justify-center rounded-md border-none bg-transparent p-0 text-[10px] font-mono leading-none transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
             isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground opacity-50",
-            canDelete && "cursor-pointer hover:text-destructive hover:opacity-100 hover:scale-110 transform duration-75"
+            canDelete && "cursor-pointer hover:text-destructive hover:scale-110"
           )}
+          aria-label={canDelete ? `Borrar línea ${index + 1}` : undefined}
           title={canDelete ? "Borrar línea" : undefined}
         >
           {line.syllableCount}
-        </span>
+        </button>
       </div>
 
     </div>
