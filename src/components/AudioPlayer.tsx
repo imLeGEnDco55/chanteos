@@ -176,7 +176,12 @@ export function AudioPlayer({
             onClick={onTogglePlay}
             size="icon"
             className="h-14 w-14 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mx-2"
-            aria-label={isPlaying ? "Pausar" : "Reproducir"}
+            aria-label={
+              isPlaying ? "Pausar" :
+                loopState === 'point-a' ? "Reproducir desde Cue A" :
+                  loopState === 'loop-ab' ? "Reproducir desde inicio del loop" :
+                    "Reproducir"
+            }
           >
             {isPlaying ? (
               <Pause className="h-7 w-7" />

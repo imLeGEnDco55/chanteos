@@ -90,9 +90,14 @@ export function useAudioPlayer(audioData: string | null) {
     if (state.isPlaying) {
       pause();
     } else {
+      // Cue behavior: if point A is set, always return to A on play
+      if (state.loopPointA !== null && audioRef.current) {
+        audioRef.current.currentTime = state.loopPointA;
+        setState(prev => ({ ...prev, currentTime: state.loopPointA! }));
+      }
       play();
     }
-  }, [state.isPlaying, play, pause]);
+  }, [state.isPlaying, state.loopPointA, state.loopState, play, pause]);
 
   const seek = useCallback((time: number) => {
     if (audioRef.current) {
@@ -134,7 +139,7 @@ export function useAudioPlayer(audioData: string | null) {
   const cycleLoopState = useCallback(() => {
     setState(prev => {
       const currentTime = audioRef.current?.currentTime ?? 0;
-      
+
       if (prev.loopState === 'off') {
         // Set point A
         return { ...prev, loopState: 'point-a' as LoopState, loopPointA: currentTime, loopPointB: null };
