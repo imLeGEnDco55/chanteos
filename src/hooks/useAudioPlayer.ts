@@ -88,10 +88,11 @@ export function useAudioPlayer(audioData: string | null) {
 
   const togglePlay = useCallback(() => {
     if (state.loopState === 'point-a' && state.loopPointA !== null && audioRef.current) {
-      // Cue mode: always restart from A, no pause
+      // Cue mode: always restart from A — no pause, ever
+      audioRef.current.pause();
       audioRef.current.currentTime = state.loopPointA;
       setState(prev => ({ ...prev, currentTime: state.loopPointA! }));
-      play();
+      audioRef.current.play();
     } else if (state.loopState === 'loop-ab' && state.loopPointA !== null && audioRef.current) {
       // Loop A-B: pause works, but unpause always restarts from A
       if (state.isPlaying) {

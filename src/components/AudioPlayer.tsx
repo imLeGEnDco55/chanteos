@@ -183,7 +183,7 @@ export function AudioPlayer({
                     "Reproducir"
             }
           >
-            {isPlaying ? (
+            {isPlaying && loopState !== 'point-a' ? (
               <Pause className="h-7 w-7" />
             ) : (
               <Play className="h-7 w-7 ml-1" />
