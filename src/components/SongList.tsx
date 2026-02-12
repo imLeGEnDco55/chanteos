@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SettingsDialog } from './SettingsDialog';
 import type { Song, PromptTemplate } from '@/types/song';
+import { cn } from '@/lib/utils';
 
 interface SongListProps {
   songs: Song[];
@@ -128,26 +129,28 @@ export function SongList({
               .map((song) => (
                 <Card
                   key={song.id}
-                  className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => onSelectSong(song)}
+                  className="flex items-start hover:bg-accent/50 transition-colors group overflow-hidden"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{song.title || 'Sin título'}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span>{song.lyrics.length} líneas</span>
-                        {song.audioFileName && (
-                          <span className="flex items-center gap-1">
-                            <Music className="h-3 w-3" />
-                            {song.audioFileName}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(song.updatedAt)}
-                      </p>
+                  <button
+                    className="flex-1 p-4 text-left min-w-0 focus-visible:outline-none focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    onClick={() => onSelectSong(song)}
+                  >
+                    <h3 className="font-semibold truncate">{song.title || 'Sin título'}</h3>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                      <span>{song.lyrics.length} líneas</span>
+                      {song.audioFileName && (
+                        <span className="flex items-center gap-1">
+                          <Music className="h-3 w-3" />
+                          {song.audioFileName}
+                        </span>
+                      )}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDate(song.updatedAt)}
+                    </p>
+                  </button>
 
+                  <div className="p-4 pl-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
