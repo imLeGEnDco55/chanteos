@@ -56,9 +56,10 @@ A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
 | MODULE | STATUS | DESCRIPTION |
 | :--- | :--- | :--- |
 | **LYRIC ENGINE** | 🟢 ACTIVE | Block-based editor with timestamps. |
-| **AUDIO VAULT** | 🟡 PARTIAL | Playback implemented. Local file only. |
+| **AUDIO VAULT** | 🟡 PARTIAL | Playback + Opus conversion. Local file only. |
 | **PROMPT INJ** | 🟢 ACTIVE | Creative obstruction library. |
 | **IMP/EXP** | 🟢 ACTIVE | JSON Data portability. |
+| **PTR** | 🟢 ACTIVE | Push-To-Rec: mic capture via long-press Play. |
 
 ## ⚠️ KNOWN ANOMALIES
 - **Mobile View:** Layout shifts on small screens.
@@ -89,3 +90,12 @@ A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
 - Conversion happens transparently on import via `audioConverter.ts`.
 - Graceful fallback: if browser doesn't support Opus, stores raw file unchanged.
 - Console logs original → converted size for debugging.
+
+## PTR (Push To Rec) v0.2.0
+- Long-press Play button (>120ms) = start recording from mic.
+- Release = stop recording immediately. No toggle state.
+- Short tap (<120ms) = normal play/pause behavior (unchanged).
+- Circular 2-voice buffer (newest replaces oldest).
+- Red halo animation on Play button + slider pulse when recording.
+- Does NOT affect Loop/Cue state.
+- Voice playback (mixing over maketa) = next iteration.

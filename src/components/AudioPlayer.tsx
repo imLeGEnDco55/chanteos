@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -30,6 +30,10 @@ interface AudioPlayerProps {
   onOpenPromptLibrary?: () => void;
   onUndo?: () => void;
   canUndo?: boolean;
+  // PTR (Push To Rec) props
+  isRecording?: boolean;
+  onStartRecording?: () => void;
+  onStopRecording?: () => void;
   // Rhyme panel props
   showRhymePanel?: boolean;
   onToggleRhymePanel?: () => void;
@@ -64,6 +68,9 @@ export function AudioPlayer({
   onOpenPromptLibrary,
   onUndo,
   canUndo = false,
+  isRecording = false,
+  onStartRecording,
+  onStopRecording,
   showRhymePanel = false,
   onToggleRhymePanel,
   selectedWord,
@@ -107,6 +114,54 @@ export function AudioPlayer({
     }
   }, []);
 
+  // PTR (Push To Rec) — pointer events on Play button
+  const MIN_PTR_DURATION = 120;
+  const ptrTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ptrActive = useRef(false);
+  const ptrStartTime = useRef(0);
+
+  const handlePlayPointerDown = useCallback(() => {
+    ptrStartTime.current = Date.now();
+    ptrActive.current = false;
+
+    ptrTimer.current = setTimeout(() => {
+      ptrActive.current = true;
+      onStartRecording?.();
+    }, MIN_PTR_DURATION);
+  }, [onStartRecording]);
+
+  const handlePlayPointerUp = useCallback(() => {
+    if (ptrTimer.current) {
+      clearTimeout(ptrTimer.current);
+      ptrTimer.current = null;
+    }
+
+    if (ptrActive.current) {
+      // Was recording → stop
+      ptrActive.current = false;
+      onStopRecording?.();
+    } else {
+      // Short tap → normal play/pause
+      onTogglePlay();
+    }
+  }, [onTogglePlay, onStopRecording]);
+
+  const handlePlayPointerCancel = useCallback(() => {
+    if (ptrTimer.current) {
+      clearTimeout(ptrTimer.current);
+      ptrTimer.current = null;
+    }
+    if (ptrActive.current) {
+      ptrActive.current = false;
+      onStopRecording?.();
+    }
+  }, [onStopRecording]);
+
+  // Inline rec-pulse animation style
+  const recPulseStyle = useMemo(() => ({
+    animation: isRecording ? 'rec-pulse 1s ease-in-out infinite' : undefined,
+  }), [isRecording]);
+
   if (!hasAudio) {
     return (
       <div
@@ -137,6 +192,18 @@ export function AudioPlayer({
       onMouseDown={preventFocusLoss}
       onTouchStart={preventFocusLoss}
     >
+      {/* Rec-pulse keyframes (injected once) */}
+      <style>{`
+        @keyframes rec-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+          50% { box-shadow: 0 0 12px 6px rgba(239, 68, 68, 0.4); }
+        }
+        @keyframes rec-line-pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+
       {/* Player controls — always rendered */}
       <div className="relative">
         {/* Progress bar with time labels */}
@@ -145,16 +212,28 @@ export function AudioPlayer({
             <span className="text-xs text-primary-foreground/80 font-mono min-w-[40px]">
               {formatTime(currentTime)}
             </span>
-            <Slider
-              value={[progress]}
-              max={100}
-              step={0.1}
-              onValueChange={([value]) => {
-                const time = (value / 100) * duration;
-                onSeek(time);
-              }}
-              className="flex-1 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-primary-foreground [&_[data-orientation=horizontal]]:bg-primary-foreground/30 [&_.bg-primary]:bg-primary-foreground"
-            />
+            <div className="relative flex-1">
+              <Slider
+                value={[progress]}
+                max={100}
+                step={0.1}
+                onValueChange={([value]) => {
+                  const time = (value / 100) * duration;
+                  onSeek(time);
+                }}
+                className={cn(
+                  "[&_[role=slider]]:border-0 [&_[role=slider]]:bg-primary-foreground [&_[data-orientation=horizontal]]:bg-primary-foreground/30 [&_.bg-primary]:bg-primary-foreground",
+                  isRecording && "[&_.bg-primary]:bg-red-500"
+                )}
+              />
+              {/* Rec line pulse */}
+              {isRecording && (
+                <div
+                  className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[2px] bg-red-500 rounded-full pointer-events-none"
+                  style={{ animation: 'rec-line-pulse 1s ease-in-out infinite' }}
+                />
+              )}
+            </div>
             <span className="text-xs text-primary-foreground/80 font-mono min-w-[40px] text-right">
               {formatTime(duration)}
             </span>
@@ -203,19 +282,31 @@ export function AudioPlayer({
             <span className="absolute text-[10px] font-bold">3</span>
           </Button>
 
-          {/* Play/Pause - Large central button */}
+          {/* Play/Pause - Large central button with PTR */}
           <Button
-            onClick={onTogglePlay}
+            onPointerDown={handlePlayPointerDown}
+            onPointerUp={handlePlayPointerUp}
+            onPointerCancel={handlePlayPointerCancel}
+            onPointerLeave={handlePlayPointerCancel}
             size="icon"
-            className="h-14 w-14 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mx-2"
+            className={cn(
+              "h-14 w-14 rounded-full mx-2 select-none touch-none transition-all",
+              isRecording
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+            )}
+            style={recPulseStyle}
             aria-label={
-              isPlaying ? "Pausar" :
-                loopState === 'point-a' ? "Reproducir desde Cue A" :
-                  loopState === 'loop-ab' ? "Reproducir desde inicio del loop" :
-                    "Reproducir"
+              isRecording ? "Grabando — suelta para detener" :
+                isPlaying ? "Pausar" :
+                  loopState === 'point-a' ? "Reproducir desde Cue A" :
+                    loopState === 'loop-ab' ? "Reproducir desde inicio del loop" :
+                      "Reproducir (mantener: grabar)"
             }
           >
-            {isPlaying && loopState !== 'point-a' ? (
+            {isRecording ? (
+              <div className="h-5 w-5 rounded-sm bg-white" />
+            ) : isPlaying && loopState !== 'point-a' ? (
               <Pause className="h-7 w-7" />
             ) : (
               <Play className="h-7 w-7 ml-1" />

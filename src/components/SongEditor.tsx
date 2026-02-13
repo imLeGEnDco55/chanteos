@@ -8,6 +8,7 @@ import { PromptLine } from './PromptLine';
 import { AudioPlayer } from './AudioPlayer';
 import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useRecorder } from '@/hooks/useRecorder';
 import { useLyricsHistory } from '@/hooks/useLyricsHistory';
 import { useRhymeSuggestions } from '@/hooks/useRhymeSuggestions';
 import { createEmptyLine } from '@/hooks/useSongs';
@@ -45,6 +46,8 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
 
   const player = useAudioPlayer(song.audioData || null);
   const { getCurrentTime } = player;
+
+  const recorder = useRecorder();
 
   const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(song.lyrics);
 
@@ -396,6 +399,9 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         onOpenPromptLibrary={handleOpenPromptLibrary}
         onUndo={handleUndo}
         canUndo={canUndo}
+        isRecording={recorder.isRecording}
+        onStartRecording={recorder.startRecording}
+        onStopRecording={recorder.stopRecording}
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
