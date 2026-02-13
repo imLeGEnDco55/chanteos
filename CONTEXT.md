@@ -82,3 +82,10 @@ A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
 - Rhyme panel:
   - Full slide-in/out coverage for panel width.
   - Dual horizontal lanes: Rhymes (top) and Context/Related (bottom), both horizontally scrollable.
+
+## AUDIO OPTIMIZER v0.2.0
+- Auto-converts any imported audio to **Opus/WebM** (native browser encoding, zero dependencies).
+- ~10x size reduction vs WAV, superior quality vs MP3 at same bitrate.
+- Conversion happens transparently on import via `audioConverter.ts`.
+- Graceful fallback: if browser doesn't support Opus, stores raw file unchanged.
+- Console logs original → converted size for debugging.
