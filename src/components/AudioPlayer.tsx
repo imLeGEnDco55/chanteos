@@ -38,6 +38,7 @@ interface AudioPlayerProps {
   hasVoices?: boolean;
   voiceCount?: number;
   voicePlaying?: boolean;
+  voiceEnabled?: boolean;
   onToggleVoice?: () => void;
   // Rhyme panel props
   showRhymePanel?: boolean;
@@ -79,6 +80,7 @@ export function AudioPlayer({
   hasVoices = false,
   voiceCount = 0,
   voicePlaying = false,
+  voiceEnabled = true,
   onToggleVoice,
   showRhymePanel = false,
   onToggleRhymePanel,
@@ -367,7 +369,7 @@ export function AudioPlayer({
             )}
           </Button>
 
-          {/* Voice playback toggle */}
+          {/* Voice channel toggle (mute/unmute — voices auto-play at timestamp) */}
           {hasVoices && (
             <Button
               variant="ghost"
@@ -375,14 +377,16 @@ export function AudioPlayer({
               onClick={onToggleVoice}
               className={cn(
                 "h-10 w-10 hover:bg-primary-foreground/20 transition-colors relative",
-                voicePlaying
+                voicePlaying && voiceEnabled
                   ? "text-green-400 bg-primary-foreground/15"
-                  : "text-primary-foreground"
+                  : !voiceEnabled
+                    ? "text-primary-foreground/40"
+                    : "text-primary-foreground"
               )}
-              title={voicePlaying ? 'Detener voz' : `Reproducir voz (${voiceCount})`}
-              aria-label={voicePlaying ? 'Detener voz grabada' : 'Reproducir voz grabada'}
+              title={voiceEnabled ? `Voces activas (${voiceCount})` : 'Voces silenciadas'}
+              aria-label={voiceEnabled ? 'Silenciar voces' : 'Activar voces'}
             >
-              {voicePlaying ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
               <span className="absolute -top-0.5 -right-0.5 text-[9px] font-bold bg-primary-foreground text-primary rounded-full w-3.5 h-3.5 flex items-center justify-center">
                 {voiceCount}
               </span>

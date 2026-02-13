@@ -2,17 +2,25 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 const MAX_VOICES = 2;
 
-interface RecorderState {
-    isRecording: boolean;
-    voiceBuffers: [Blob | null, Blob | null];
-    activeVoice: 0 | 1;
-    hasPermission: boolean | null; // null = not yet requested
+export interface VoiceEntry {
+    blob: Blob;
+    startTime: number; // maketa time (seconds) when recording began
 }
 
-export function useRecorder() {
+interface RecorderState {
+    isRecording: boolean;
+    voices: [VoiceEntry | null, VoiceEntry | null];
+    activeVoice: 0 | 1;
+    hasPermission: boolean | null;
+}
+
+/**
+ * @param getMaketaTime - function returning the maketa's current playback time
+ */
+export function useRecorder(getMaketaTime?: () => number) {
     const [state, setState] = useState<RecorderState>({
         isRecording: false,
-        voiceBuffers: [null, null],
+        voices: [null, null],
         activeVoice: 0,
         hasPermission: null,
     });
@@ -20,7 +28,8 @@ export function useRecorder() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const chunksRef = useRef<BlobPart[]>([]);
-    const isRecordingRef = useRef(false); // Mirror for sync checks
+    const isRecordingRef = useRef(false);
+    const recordStartTimeRef = useRef(0); // maketa time at rec start
 
     // Cleanup on unmount
     useEffect(() => {
@@ -33,14 +42,15 @@ export function useRecorder() {
     }, []);
 
     const startRecording = useCallback(async () => {
-        // Guard: already recording
         if (isRecordingRef.current) {
             console.warn('[Recorder] Already recording, ignoring');
             return;
         }
 
+        // Capture maketa time at recording start
+        recordStartTimeRef.current = getMaketaTime?.() ?? 0;
+
         try {
-            // Request mic — browser will remember permission
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: true,
@@ -51,7 +61,6 @@ export function useRecorder() {
 
             streamRef.current = stream;
 
-            // Choose codec — prefer opus, fallback to whatever browser supports
             const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
                 ? 'audio/webm;codecs=opus'
                 : 'audio/webm';
@@ -71,6 +80,8 @@ export function useRecorder() {
                 stopRecording();
             };
 
+            const capturedStartTime = recordStartTimeRef.current;
+
             recorder.onstop = () => {
                 const blob = new Blob(chunksRef.current, { type: mimeType });
                 chunksRef.current = [];
@@ -78,17 +89,20 @@ export function useRecorder() {
                 if (blob.size > 0) {
                     setState(prev => {
                         const nextVoice = prev.activeVoice;
-                        const newBuffers: [Blob | null, Blob | null] = [...prev.voiceBuffers];
-                        newBuffers[nextVoice] = blob;
+                        const newVoices: [VoiceEntry | null, VoiceEntry | null] = [...prev.voices];
+                        newVoices[nextVoice] = {
+                            blob,
+                            startTime: capturedStartTime,
+                        };
 
                         console.log(
-                            `[Recorder] Voice ${nextVoice} saved: ${(blob.size / 1024).toFixed(1)}KB`
+                            `[Recorder] Voice ${nextVoice} saved: ${(blob.size / 1024).toFixed(1)}KB @ ${capturedStartTime.toFixed(1)}s`
                         );
 
                         return {
                             ...prev,
                             isRecording: false,
-                            voiceBuffers: newBuffers,
+                            voices: newVoices,
                             activeVoice: ((nextVoice + 1) % MAX_VOICES) as 0 | 1,
                         };
                     });
@@ -96,11 +110,10 @@ export function useRecorder() {
                     setState(prev => ({ ...prev, isRecording: false }));
                 }
 
-                // Stop mic tracks to release hardware
                 stream.getTracks().forEach(t => t.stop());
             };
 
-            recorder.start(100); // Collect data every 100ms
+            recorder.start(100);
             isRecordingRef.current = true;
             setState(prev => ({
                 ...prev,
@@ -108,7 +121,7 @@ export function useRecorder() {
                 hasPermission: true,
             }));
 
-            console.log('[Recorder] Started');
+            console.log(`[Recorder] Started @ maketa ${capturedStartTime.toFixed(1)}s`);
         } catch (error) {
             console.error('[Recorder] Failed to start:', error);
             isRecordingRef.current = false;
@@ -118,7 +131,7 @@ export function useRecorder() {
                 hasPermission: false,
             }));
         }
-    }, []);
+    }, [getMaketaTime]);
 
     const stopRecording = useCallback(() => {
         if (!isRecordingRef.current) return;
@@ -136,7 +149,7 @@ export function useRecorder() {
     const clearVoices = useCallback(() => {
         setState(prev => ({
             ...prev,
-            voiceBuffers: [null, null],
+            voices: [null, null],
             activeVoice: 0,
         }));
         console.log('[Recorder] Voices cleared');
@@ -144,7 +157,7 @@ export function useRecorder() {
 
     return {
         isRecording: state.isRecording,
-        voiceBuffers: state.voiceBuffers,
+        voices: state.voices,
         activeVoice: state.activeVoice,
         hasPermission: state.hasPermission,
         startRecording,

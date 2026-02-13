@@ -1,36 +1,37 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import type { VoiceEntry } from './useRecorder';
 
 interface VoiceMixerState {
     voiceEnabled: boolean;
     voicePlaying: boolean;
-    activePlaybackVoice: number | null; // which voice slot is currently playing
 }
 
 /**
  * Mixes voice recordings over the maketa using AudioContext.
- * Connects the HTMLAudioElement (maketa) and voice Blobs to a shared AudioContext
- * so both play through speakers simultaneously.
+ * Voices automatically play at the maketa timestamp where they were recorded.
  */
 export function useVoiceMixer(
     audioElement: HTMLAudioElement | null,
-    voiceBuffers: [Blob | null, Blob | null]
+    voices: [VoiceEntry | null, VoiceEntry | null],
+    isPlaying: boolean,
+    currentTime: number
 ) {
     const [state, setState] = useState<VoiceMixerState>({
         voiceEnabled: true,
         voicePlaying: false,
-        activePlaybackVoice: null,
     });
 
-    // AudioContext and nodes — persist across renders
+    // AudioContext and nodes
     const ctxRef = useRef<AudioContext | null>(null);
     const maketaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
     const maketaGainRef = useRef<GainNode | null>(null);
-    const voiceSourceRef = useRef<AudioBufferSourceNode | null>(null);
     const voiceGainRef = useRef<GainNode | null>(null);
-    const decodedBuffersRef = useRef<[AudioBuffer | null, AudioBuffer | null]>([null, null]);
+    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const decodedRef = useRef<[{ buffer: AudioBuffer; startTime: number } | null, { buffer: AudioBuffer; startTime: number } | null]>([null, null]);
     const connectedElementRef = useRef<HTMLAudioElement | null>(null);
+    const triggeredRef = useRef<Set<number>>(new Set()); // voice indices already triggered this playback
 
-    // Initialize AudioContext and connect maketa
+    // Initialize AudioContext
     const ensureContext = useCallback(() => {
         if (!ctxRef.current) {
             ctxRef.current = new AudioContext();
@@ -39,22 +40,16 @@ export function useVoiceMixer(
             maketaGainRef.current.connect(ctxRef.current.destination);
             voiceGainRef.current.connect(ctxRef.current.destination);
         }
-
-        // Resume if suspended
         if (ctxRef.current.state === 'suspended') {
             ctxRef.current.resume();
         }
-
         return ctxRef.current;
     }, []);
 
-    // Connect maketa HTMLAudioElement to AudioContext (once per element)
+    // Connect maketa HTMLAudioElement (once per element)
     useEffect(() => {
         if (!audioElement || connectedElementRef.current === audioElement) return;
-
         const ctx = ensureContext();
-
-        // createMediaElementSource can only be called once per element
         try {
             const source = ctx.createMediaElementSource(audioElement);
             maketaSourceRef.current = source;
@@ -62,116 +57,136 @@ export function useVoiceMixer(
             connectedElementRef.current = audioElement;
             console.log('[VoiceMixer] Maketa connected to AudioContext');
         } catch {
-            // Already connected (happens on HMR)
             console.log('[VoiceMixer] Maketa already connected');
         }
     }, [audioElement, ensureContext]);
 
-    // Decode voice blobs into AudioBuffers when they change
+    // Decode voice blobs when they change
     useEffect(() => {
         let cancelled = false;
 
         async function decode() {
             const ctx = ensureContext();
-
             for (let i = 0; i < 2; i++) {
-                const blob = voiceBuffers[i];
-                if (!blob) {
-                    decodedBuffersRef.current[i] = null;
+                const voice = voices[i];
+                if (!voice) {
+                    decodedRef.current[i] = null;
                     continue;
                 }
-
                 try {
-                    const arrayBuffer = await blob.arrayBuffer();
+                    const arrayBuffer = await voice.blob.arrayBuffer();
                     const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
                     if (!cancelled) {
-                        decodedBuffersRef.current[i] = audioBuffer;
-                        console.log(`[VoiceMixer] Voice ${i} decoded: ${audioBuffer.duration.toFixed(1)}s`);
+                        decodedRef.current[i] = {
+                            buffer: audioBuffer,
+                            startTime: voice.startTime,
+                        };
+                        console.log(`[VoiceMixer] Voice ${i} decoded: ${audioBuffer.duration.toFixed(1)}s @ ${voice.startTime.toFixed(1)}s`);
                     }
                 } catch (err) {
                     console.error(`[VoiceMixer] Failed to decode voice ${i}:`, err);
-                    decodedBuffersRef.current[i] = null;
+                    decodedRef.current[i] = null;
                 }
             }
         }
 
         decode();
         return () => { cancelled = true; };
-    }, [voiceBuffers, ensureContext]);
+    }, [voices, ensureContext]);
 
-    // Play a specific voice buffer
-    const playVoice = useCallback((voiceIndex: number) => {
+    // Stop all active voice sources
+    const stopAllVoices = useCallback(() => {
+        activeSourcesRef.current.forEach(src => {
+            try { src.stop(); } catch { /* already stopped */ }
+        });
+        activeSourcesRef.current = [];
+        setState(prev => ({ ...prev, voicePlaying: false }));
+    }, []);
+
+    // Play a voice at a specific offset (accounting for seek position)
+    const triggerVoice = useCallback((voiceIndex: number, offset: number = 0) => {
         const ctx = ctxRef.current;
-        const buffer = decodedBuffersRef.current[voiceIndex];
-        if (!ctx || !buffer || !voiceGainRef.current) return;
-
-        // Stop any currently playing voice
-        if (voiceSourceRef.current) {
-            try { voiceSourceRef.current.stop(); } catch { /* already stopped */ }
-        }
+        const decoded = decodedRef.current[voiceIndex];
+        if (!ctx || !decoded || !voiceGainRef.current) return;
+        if (!state.voiceEnabled) return;
 
         const source = ctx.createBufferSource();
-        source.buffer = buffer;
+        source.buffer = decoded.buffer;
         source.connect(voiceGainRef.current);
 
         source.onended = () => {
-            setState(prev => ({ ...prev, voicePlaying: false, activePlaybackVoice: null }));
+            activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
+            if (activeSourcesRef.current.length === 0) {
+                setState(prev => ({ ...prev, voicePlaying: false }));
+            }
         };
 
-        source.start(0);
-        voiceSourceRef.current = source;
-        setState(prev => ({ ...prev, voicePlaying: true, activePlaybackVoice: voiceIndex }));
-        console.log(`[VoiceMixer] Playing voice ${voiceIndex}`);
-    }, []);
-
-    // Stop current voice playback
-    const stopVoice = useCallback(() => {
-        if (voiceSourceRef.current) {
-            try { voiceSourceRef.current.stop(); } catch { /* already stopped */ }
-            voiceSourceRef.current = null;
-        }
-        setState(prev => ({ ...prev, voicePlaying: false, activePlaybackVoice: null }));
-    }, []);
-
-    // Toggle voice playback — play the most recent voice, or stop if playing
-    const toggleVoice = useCallback(() => {
-        if (state.voicePlaying) {
-            stopVoice();
-            return;
+        // If offset > 0, skip into the voice buffer
+        const clampedOffset = Math.min(offset, decoded.buffer.duration - 0.01);
+        if (clampedOffset > 0) {
+            source.start(0, clampedOffset);
+        } else {
+            source.start(0);
         }
 
-        // Find most recently recorded voice (try slot that was last written)
-        // activeVoice in recorder points to NEXT slot, so most recent = (activeVoice - 1 + 2) % 2
-        // But we don't have activeVoice here, so just pick the first available
+        activeSourcesRef.current.push(source);
+        setState(prev => ({ ...prev, voicePlaying: true }));
+        console.log(`[VoiceMixer] Playing voice ${voiceIndex} (offset: ${clampedOffset.toFixed(1)}s)`);
+    }, [state.voiceEnabled]);
+
+    // Reset triggered set when playback stops
+    useEffect(() => {
+        if (!isPlaying) {
+            triggeredRef.current.clear();
+            stopAllVoices();
+        }
+    }, [isPlaying, stopAllVoices]);
+
+    // Auto-trigger voices when maketa time crosses their startTime
+    useEffect(() => {
+        if (!isPlaying || !state.voiceEnabled) return;
+
         for (let i = 0; i < 2; i++) {
-            if (decodedBuffersRef.current[i]) {
-                playVoice(i);
-                return;
+            const decoded = decodedRef.current[i];
+            if (!decoded) continue;
+            if (triggeredRef.current.has(i)) continue;
+
+            const voiceStart = decoded.startTime;
+            const voiceEnd = voiceStart + decoded.buffer.duration;
+
+            // Check if current time is within the voice's time range
+            if (currentTime >= voiceStart && currentTime < voiceEnd) {
+                // Calculate offset into the voice buffer
+                const offset = currentTime - voiceStart;
+                triggeredRef.current.add(i);
+                triggerVoice(i, offset);
             }
         }
-    }, [state.voicePlaying, stopVoice, playVoice]);
+    }, [currentTime, isPlaying, state.voiceEnabled, triggerVoice]);
 
-    // Toggle voice enabled (mute/unmute voice channel)
+    // Toggle voice enabled (mute/unmute)
     const toggleVoiceEnabled = useCallback(() => {
         setState(prev => {
             const next = !prev.voiceEnabled;
             if (voiceGainRef.current) {
                 voiceGainRef.current.gain.value = next ? 1 : 0;
             }
+            if (!next) {
+                stopAllVoices();
+            }
             return { ...prev, voiceEnabled: next };
         });
-    }, []);
+    }, [stopAllVoices]);
 
-    // Check if we have any voices
-    const hasVoices = voiceBuffers[0] !== null || voiceBuffers[1] !== null;
-    const voiceCount = (voiceBuffers[0] ? 1 : 0) + (voiceBuffers[1] ? 1 : 0);
+    const hasVoices = voices[0] !== null || voices[1] !== null;
+    const voiceCount = (voices[0] ? 1 : 0) + (voices[1] ? 1 : 0);
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (voiceSourceRef.current) {
-                try { voiceSourceRef.current.stop(); } catch { /* noop */ }
-            }
+            activeSourcesRef.current.forEach(src => {
+                try { src.stop(); } catch { /* noop */ }
+            });
             if (ctxRef.current) {
                 ctxRef.current.close();
             }
@@ -181,12 +196,9 @@ export function useVoiceMixer(
     return {
         voiceEnabled: state.voiceEnabled,
         voicePlaying: state.voicePlaying,
-        activePlaybackVoice: state.activePlaybackVoice,
         hasVoices,
         voiceCount,
-        playVoice,
-        stopVoice,
-        toggleVoice,
         toggleVoiceEnabled,
+        stopAllVoices,
     };
 }

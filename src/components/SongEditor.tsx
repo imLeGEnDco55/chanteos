@@ -48,8 +48,8 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const player = useAudioPlayer(song.audioData || null);
   const { getCurrentTime } = player;
 
-  const recorder = useRecorder();
-  const mixer = useVoiceMixer(player.audioElement, recorder.voiceBuffers);
+  const recorder = useRecorder(getCurrentTime);
+  const mixer = useVoiceMixer(player.audioElement, recorder.voices, player.isPlaying, player.currentTime);
 
   const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(song.lyrics);
 
@@ -407,7 +407,8 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         hasVoices={mixer.hasVoices}
         voiceCount={mixer.voiceCount}
         voicePlaying={mixer.voicePlaying}
-        onToggleVoice={mixer.toggleVoice}
+        voiceEnabled={mixer.voiceEnabled}
+        onToggleVoice={mixer.toggleVoiceEnabled}
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
