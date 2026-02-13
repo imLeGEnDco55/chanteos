@@ -147,43 +147,58 @@ export function SongList({
               .map((song) => (
                 <Card
                   key={song.id}
-                  className="cursor-pointer border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
-                  onClick={() => onSelectSong(song)}
+                  className="relative group overflow-hidden border-border/70 bg-card/85 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-semibold">{song.title || 'Sin título'}</h3>
-                      <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>{song.lyrics.length} líneas</span>
-                        {song.audioFileName && (
-                          <span className="flex items-center gap-1">
-                            <Music className="h-3 w-3" />
-                            {song.audioFileName}
-                          </span>
-                        )}
+                  <div className="flex items-stretch">
+                    <button
+                      onClick={() => onSelectSong(song)}
+                      className="flex-1 p-4 text-left focus-visible:outline-none focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                    >
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-foreground">
+                          {song.title || 'Sin título'}
+                        </h3>
+                        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{song.lyrics.length} líneas</span>
+                          {song.audioFileName && (
+                            <span className="flex items-center gap-1">
+                              <Music className="h-3 w-3" />
+                              {song.audioFileName}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatDate(song.updatedAt)}
+                        </p>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatDate(song.updatedAt)}</p>
-                    </div>
+                    </button>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSongToDelete(song.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="p-2 flex items-start">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label={`Acciones para ${song.title || 'canción sin título'}`}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSongToDelete(song.id);
+                            }}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </Card>
               ))}
