@@ -1,5 +1,5 @@
 import { useRef, useCallback, useMemo } from 'react';
-import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2, ChevronLeft, ChevronRight, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { formatTime } from '@/lib/syllables';
@@ -34,6 +34,11 @@ interface AudioPlayerProps {
   isRecording?: boolean;
   onStartRecording?: () => void;
   onStopRecording?: () => void;
+  // Voice mixer props
+  hasVoices?: boolean;
+  voiceCount?: number;
+  voicePlaying?: boolean;
+  onToggleVoice?: () => void;
   // Rhyme panel props
   showRhymePanel?: boolean;
   onToggleRhymePanel?: () => void;
@@ -71,6 +76,10 @@ export function AudioPlayer({
   isRecording = false,
   onStartRecording,
   onStopRecording,
+  hasVoices = false,
+  voiceCount = 0,
+  voicePlaying = false,
+  onToggleVoice,
   showRhymePanel = false,
   onToggleRhymePanel,
   selectedWord,
@@ -357,6 +366,28 @@ export function AudioPlayer({
               <span className="absolute text-[8px] font-bold text-green-400">AB</span>
             )}
           </Button>
+
+          {/* Voice playback toggle */}
+          {hasVoices && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleVoice}
+              className={cn(
+                "h-10 w-10 hover:bg-primary-foreground/20 transition-colors relative",
+                voicePlaying
+                  ? "text-green-400 bg-primary-foreground/15"
+                  : "text-primary-foreground"
+              )}
+              title={voicePlaying ? 'Detener voz' : `Reproducir voz (${voiceCount})`}
+              aria-label={voicePlaying ? 'Detener voz grabada' : 'Reproducir voz grabada'}
+            >
+              {voicePlaying ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              <span className="absolute -top-0.5 -right-0.5 text-[9px] font-bold bg-primary-foreground text-primary rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                {voiceCount}
+              </span>
+            </Button>
+          )}
 
           {/* Timestamp button */}
           <Button

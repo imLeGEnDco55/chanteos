@@ -183,6 +183,7 @@ export function useAudioPlayer(audioData: string | null) {
 
   return {
     ...state,
+    audioElement: audioRef.current,
     play,
     pause,
     togglePlay,

@@ -9,6 +9,7 @@ import { AudioPlayer } from './AudioPlayer';
 import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useRecorder } from '@/hooks/useRecorder';
+import { useVoiceMixer } from '@/hooks/useVoiceMixer';
 import { useLyricsHistory } from '@/hooks/useLyricsHistory';
 import { useRhymeSuggestions } from '@/hooks/useRhymeSuggestions';
 import { createEmptyLine } from '@/hooks/useSongs';
@@ -48,6 +49,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const { getCurrentTime } = player;
 
   const recorder = useRecorder();
+  const mixer = useVoiceMixer(player.audioElement, recorder.voiceBuffers);
 
   const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(song.lyrics);
 
@@ -402,6 +404,10 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         isRecording={recorder.isRecording}
         onStartRecording={recorder.startRecording}
         onStopRecording={recorder.stopRecording}
+        hasVoices={mixer.hasVoices}
+        voiceCount={mixer.voiceCount}
+        voicePlaying={mixer.voicePlaying}
+        onToggleVoice={mixer.toggleVoice}
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
