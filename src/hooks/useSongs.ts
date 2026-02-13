@@ -130,8 +130,10 @@ export function useSongs() {
 
     if (audioFile) {
       audioFileName = audioFile.name;
-      // Save to IndexedDB and get blob URL
-      audioBlobUrl = await saveAudioToIndexedDB(songId, audioFile);
+      // Save to IndexedDB (auto-converts to Opus) and get blob URL
+      const result = await saveAudioToIndexedDB(songId, audioFile);
+      audioBlobUrl = result.blobUrl;
+      audioFileName = result.fileName;
       audioCache.set(songId, audioBlobUrl);
     }
 
@@ -153,10 +155,10 @@ export function useSongs() {
   const updateSong = useCallback(async (songId: string, updates: Partial<Song>, audioFile?: File): Promise<void> => {
     // If updating audio with a new file, save to IndexedDB
     if (audioFile) {
-      const blobUrl = await saveAudioToIndexedDB(songId, audioFile);
-      audioCache.set(songId, blobUrl);
-      updates.audioData = blobUrl;
-      updates.audioFileName = audioFile.name;
+      const result = await saveAudioToIndexedDB(songId, audioFile);
+      audioCache.set(songId, result.blobUrl);
+      updates.audioData = result.blobUrl;
+      updates.audioFileName = result.fileName;
     }
 
     setSongs(prev => prev.map(song =>
