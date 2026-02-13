@@ -29,6 +29,7 @@ export function useRecorder(getMaketaTime?: () => number) {
     const streamRef = useRef<MediaStream | null>(null);
     const chunksRef = useRef<BlobPart[]>([]);
     const isRecordingRef = useRef(false);
+    const stopRequestedRef = useRef(false); // Guards async race: pointerUp before mic ready
     const recordStartTimeRef = useRef(0); // maketa time at rec start
 
     // Cleanup on unmount
@@ -46,6 +47,9 @@ export function useRecorder(getMaketaTime?: () => number) {
             console.warn('[Recorder] Already recording, ignoring');
             return;
         }
+
+        // Reset stop guard
+        stopRequestedRef.current = false;
 
         // Capture maketa time at recording start
         recordStartTimeRef.current = getMaketaTime?.() ?? 0;
@@ -122,6 +126,16 @@ export function useRecorder(getMaketaTime?: () => number) {
             }));
 
             console.log(`[Recorder] Started @ maketa ${capturedStartTime.toFixed(1)}s`);
+
+            // Check if stop was requested while we were waiting for getUserMedia
+            if (stopRequestedRef.current) {
+                console.log('[Recorder] Stop was requested during init, stopping now');
+                stopRequestedRef.current = false;
+                if (recorder.state === 'recording') {
+                    isRecordingRef.current = false;
+                    recorder.stop();
+                }
+            }
         } catch (error) {
             console.error('[Recorder] Failed to start:', error);
             isRecordingRef.current = false;
@@ -134,7 +148,13 @@ export function useRecorder(getMaketaTime?: () => number) {
     }, [getMaketaTime]);
 
     const stopRecording = useCallback(() => {
-        if (!isRecordingRef.current) return;
+        if (!isRecordingRef.current) {
+            // Recording hasn't started yet (async getUserMedia pending)
+            // Set flag so startRecording auto-stops when ready
+            stopRequestedRef.current = true;
+            console.log('[Recorder] Stop requested (recording not yet active)');
+            return;
+        }
 
         isRecordingRef.current = false;
 

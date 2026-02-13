@@ -100,10 +100,11 @@ A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
 - Does NOT affect Loop/Cue state.
 - Voice playback (mixing over maketa) = next iteration.
 
-## VOICE PLAYBACK v0.2.0
-- `useVoiceMixer` hook routes maketa + voices through shared `AudioContext`.
+## VOICE PLAYBACK v0.3.0
+- `useVoiceMixer` routes maketa + voices through shared `AudioContext`.
 - `createMediaElementSource` captures HTMLAudioElement for mixing.
-- Voice blobs decoded to `AudioBuffer` on demand.
-- Per-channel `GainNode` for independent volume control.
-- Mic button appears in player when voices exist (with count badge).
-- Tap = play most recent voice over maketa. Tap again = stop.
+- Voices store `startTime` — the maketa timestamp when recording began.
+- **Auto-sync**: voices auto-play when maketa reaches their recorded timestamp.
+- Supports mid-voice seeking (calculates offset into voice buffer).
+- Mic button = mute/unmute toggle (voices auto-play when enabled).
+- Per-channel `GainNode` for independent volume.

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { importProjectFromChnt } from '@/lib/projectFile';
+import { APP_VERSION } from '@/lib/version';
 import { Music, Plus, Trash2, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -85,7 +86,10 @@ export function SongList({
               <Music className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">Chanteos</h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-xl font-bold tracking-tight">Chanteos</h1>
+                <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary leading-none">v{APP_VERSION}</span>
+              </div>
               <p className="text-xs text-muted-foreground">Sonic Workspace</p>
             </div>
           </div>
