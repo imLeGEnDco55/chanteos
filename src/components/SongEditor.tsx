@@ -1,10 +1,9 @@
-import { Plus, ChevronLeft, MoreVertical, FileText } from 'lucide-react';
+import { ChevronLeft, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LyricLine } from './LyricLine';
-import { PromptLine } from './PromptLine';
+import { LyricsContent } from './LyricsContent';
 import { AudioPlayer } from './AudioPlayer';
 import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -224,13 +223,6 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     setShowRhymePanel(prev => !prev);
   }, []);
 
-  // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
-    .filter(line => line.type !== 'prompt')
-    .reduce((sum, line) => sum + line.syllableCount, 0);
-
-  const lyricLineCount = song.lyrics.filter(line => line.type !== 'prompt').length;
-
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
       {/* Header */}
@@ -289,71 +281,19 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
             />
           </div>
         ) : (
-          <div className="py-2 pb-40">
-            {/* Lyrics lines */}
-            {song.lyrics.map((line, index) => (
-              <div
-                key={line.id}
-                className={cn(
-                  "transition-colors duration-200",
-                  line.type !== 'prompt' && activeLineIndex === index && "bg-primary/10"
-                )}
-              >
-                {line.type === 'prompt' ? (
-                  <PromptLine
-                    index={index}
-                    line={line}
-                    onUpdate={handleUpdateLine}
-                    onDelete={handleDeleteLine}
-                    canDelete={song.lyrics.length > 1}
-                    onInsertLine={handleInsertLine}
-                    shouldFocus={focusedLineIndex === index}
-                  />
-                ) : (
-                  <LyricLine
-                    index={index}
-                    line={line}
-                    onUpdate={handleUpdateLine}
-                    onDelete={handleDeleteLine}
-                    onInsertLine={handleInsertLine}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    onWordSelect={handleWordSelect}
-                    canDelete={song.lyrics.length > 1}
-                    shouldFocus={focusedLineIndex === index}
-                    isActive={activeLineIndex === index}
-                  />
-                )}
-              </div>
-            ))}
-
-            {/* Add line buttons */}
-            <div className="mt-3 flex gap-2 px-3">
-              <Button
-                variant="ghost"
-                onClick={handleAddLine}
-                className="flex-1 gap-2 rounded-lg border border-border/60 bg-card/50 text-muted-foreground hover:bg-card hover:text-foreground"
-              >
-                <Plus className="h-4 w-4" />
-                Línea
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={handleAddPromptLine}
-                className="flex-1 gap-2 rounded-lg border border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent"
-              >
-                <FileText className="h-4 w-4" />
-                Prompt
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-              <span>{lyricLineCount} líneas</span>
-              <span>•</span>
-              <span>{totalSyllables} sílabas</span>
-            </div>
-          </div>
+          <LyricsContent
+            lyrics={song.lyrics}
+            activeLineIndex={activeLineIndex}
+            focusedLineIndex={focusedLineIndex}
+            onUpdateLine={handleUpdateLine}
+            onDeleteLine={handleDeleteLine}
+            onInsertLine={handleInsertLine}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onWordSelect={handleWordSelect}
+            onAddLine={handleAddLine}
+            onAddPromptLine={handleAddPromptLine}
+          />
         )}
       </ScrollArea>
 
