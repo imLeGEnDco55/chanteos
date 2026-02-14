@@ -108,3 +108,7 @@ A **Sonic Workspace** for structuring chaotic inspiration into cohesive lyrics.
 - Supports mid-voice seeking (calculates offset into voice buffer).
 - Mic button = mute/unmute toggle (voices auto-play when enabled).
 - Per-channel `GainNode` for independent volume.
+
+## UX REFINEMENTS v0.3.1
+- **API Key Visibility:** Added visibility toggle (Eye/EyeOff) for Gemini API key input in Settings.
+- **Testing:** Added Vitest + Testing Library infrastructure for component verification.
