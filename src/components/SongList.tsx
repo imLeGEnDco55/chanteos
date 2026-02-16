@@ -108,6 +108,7 @@ export function SongList({
               onClick={() => fileInputRef.current?.click()}
               disabled={isImporting}
               title="Importar Proyecto (.CHNT)"
+              aria-label="Importar proyecto"
             >
               <Upload className="h-4 w-4" />
             </Button>
@@ -171,7 +172,7 @@ export function SongList({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Opciones de canción">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -199,6 +200,7 @@ export function SongList({
         open={!!songToDelete}
         onOpenChange={(open) => !open && setSongToDelete(null)}
         onConfirm={handleConfirmDelete}
+        title={songToDelete ? `¿Eliminar "${songs.find(s => s.id === songToDelete)?.title || 'canción'}"?` : undefined}
       />
     </div>
   );
