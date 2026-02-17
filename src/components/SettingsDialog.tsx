@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/useTheme';
 import { useSettings } from '@/hooks/useSettings';
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import type { PromptTemplate } from '@/types/song';
 import { toast } from 'sonner';
 
@@ -41,6 +42,7 @@ export function SettingsDialog({
   const [newContent, setNewContent] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
 
   // Local state for editing
   const [apiKey, setApiKey] = useState('');
@@ -77,6 +79,13 @@ export function SettingsDialog({
       setNewName('');
       setNewContent('');
       setIsAdding(false);
+    }
+  };
+
+  const handleConfirmDeletePrompt = () => {
+    if (promptToDelete) {
+      onDeletePrompt(promptToDelete);
+      setPromptToDelete(null);
     }
   };
 
@@ -201,7 +210,7 @@ export function SettingsDialog({
                     Plantillas reutilizables para insertar en tus canciones
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleExportPrompts} title="Exportar librería">
+                <Button variant="outline" size="sm" onClick={handleExportPrompts} title="Exportar librería" aria-label="Exportar librería de prompts">
                   <Download className="h-4 w-4 mr-2" />
                   Exportar
                 </Button>
@@ -220,12 +229,14 @@ export function SettingsDialog({
                           onChange={(e) => onUpdatePrompt(prompt.id, { name: e.target.value })}
                           placeholder="Nombre del prompt"
                           className="font-medium"
+                          aria-label="Nombre del prompt"
                         />
                         <Textarea
                           value={prompt.content}
                           onChange={(e) => onUpdatePrompt(prompt.id, { content: e.target.value })}
                           placeholder="Contenido..."
                           rows={4}
+                          aria-label="Contenido del prompt"
                         />
                         <Button
                           size="sm"
@@ -246,7 +257,7 @@ export function SettingsDialog({
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onDeletePrompt(prompt.id)}
+                            onClick={() => setPromptToDelete(prompt.id)}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             aria-label={`Borrar prompt: ${prompt.name}`}
                           >
@@ -271,12 +282,14 @@ export function SettingsDialog({
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder="Nombre del prompt"
                       autoFocus
+                      aria-label="Nombre del nuevo prompt"
                     />
                     <Textarea
                       value={newContent}
                       onChange={(e) => setNewContent(e.target.value)}
                       placeholder="Contenido del prompt (ej: [Verse], [Chorus]...)"
                       rows={4}
+                      aria-label="Contenido del nuevo prompt"
                     />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={handleAdd}>
@@ -320,6 +333,14 @@ export function SettingsDialog({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      <DeleteConfirmationDialog
+        open={!!promptToDelete}
+        onOpenChange={(open) => !open && setPromptToDelete(null)}
+        onConfirm={handleConfirmDeletePrompt}
+        title="¿Eliminar plantilla?"
+        description="Esta acción eliminará la plantilla de prompt permanentemente."
+      />
     </Dialog>
   );
 }
