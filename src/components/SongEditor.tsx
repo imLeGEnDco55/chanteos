@@ -60,24 +60,35 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     resetHistory(song.lyrics);
   }, [song.id, resetHistory]);
 
+  // Pre-calculate lyric times to avoid parsing strings on every frame
+  const lyricTimes = useMemo(() => {
+    return song.lyrics.map(line => {
+      if (line.type !== 'prompt' && line.timestamp) {
+        return parseTime(line.timestamp);
+      }
+      return -1;
+    });
+  }, [song.lyrics]);
+
   // Find the active line based on current playback time
   const activeLineIndex = useMemo(() => {
     if (!player.isPlaying && player.currentTime === 0) return -1;
 
     let activeIndex = -1;
-    for (let i = 0; i < song.lyrics.length; i++) {
-      const line = song.lyrics[i];
-      if (line.type !== 'prompt' && line.timestamp) {
-        const lineTime = parseTime(line.timestamp);
-        if (lineTime <= player.currentTime) {
+    for (let i = 0; i < lyricTimes.length; i++) {
+      const time = lyricTimes[i];
+      // Skip prompts (-1) and future lines
+      if (time !== -1) {
+        if (time <= player.currentTime) {
           activeIndex = i;
         } else {
+          // Since timestamps are typically sequential, we can stop early
           break;
         }
       }
     }
     return activeIndex;
-  }, [player.currentTime, player.isPlaying, song.lyrics]);
+  }, [player.currentTime, player.isPlaying, lyricTimes]);
 
   const handleAddLine = useCallback(() => {
     const currentLyrics = lyricsRef.current;
