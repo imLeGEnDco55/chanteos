@@ -108,6 +108,7 @@ export function SongList({
               onClick={() => fileInputRef.current?.click()}
               disabled={isImporting}
               title="Importar Proyecto (.CHNT)"
+              aria-label="Importar proyecto"
             >
               <Upload className="h-4 w-4" />
             </Button>
@@ -151,10 +152,17 @@ export function SongList({
               .map((song) => (
                 <Card
                   key={song.id}
-                  className="cursor-pointer border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
-                  onClick={() => onSelectSong(song)}
+                  className="group relative border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between">
+                  <button
+                    onClick={() => onSelectSong(song)}
+                    className="absolute inset-0 z-0 h-full w-full cursor-pointer rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label={`Abrir canción ${song.title || 'Sin título'}`}
+                  >
+                    <span className="sr-only">Abrir canción</span>
+                  </button>
+
+                  <div className="relative z-10 flex items-start justify-between pointer-events-none">
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-semibold">{song.title || 'Sin título'}</h3>
                       <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
@@ -169,25 +177,27 @@ export function SongList({
                       <p className="mt-1 text-xs text-muted-foreground">{formatDate(song.updatedAt)}</p>
                     </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSongToDelete(song.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="pointer-events-auto">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSongToDelete(song.id);
+                            }}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </Card>
               ))}
