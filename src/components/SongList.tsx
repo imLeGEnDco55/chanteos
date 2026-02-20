@@ -158,9 +158,7 @@ export function SongList({
                     onClick={() => onSelectSong(song)}
                     className="absolute inset-0 z-0 h-full w-full cursor-pointer rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     aria-label={`Abrir canción ${song.title || 'Sin título'}`}
-                  >
-                    <span className="sr-only">Abrir canción</span>
-                  </button>
+                  />
 
                   <div className="relative z-10 flex items-start justify-between pointer-events-none">
                     <div className="min-w-0 flex-1">
