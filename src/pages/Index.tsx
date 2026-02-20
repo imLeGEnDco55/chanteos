@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { SongList } from '@/components/SongList';
 import { SongEditor } from '@/components/SongEditor';
 import { CreateSongDialog } from '@/components/CreateSongDialog';
@@ -14,37 +14,37 @@ const Index = () => {
 
   const selectedSong = selectedSongId ? getSong(selectedSongId) : null;
 
-  const handleCreateSong = useCallback(async (title: string, audioFile: File | null) => {
+  const handleCreateSong = async (title: string, audioFile: File | null) => {
     const newSong = await createSong(title, audioFile);
     setSelectedSongId(newSong.id);
-  }, [createSong]);
+  };
 
-  const handleSelectSong = useCallback((song: Song) => {
+  const handleSelectSong = (song: Song) => {
     setSelectedSongId(song.id);
-  }, []);
+  };
 
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     setSelectedSongId(null);
-  }, []);
+  };
 
-  const handleUpdateSong = useCallback((updates: Partial<Song>, audioFile?: File) => {
+  const handleUpdateSong = (updates: Partial<Song>, audioFile?: File) => {
     if (selectedSongId) {
       updateSong(selectedSongId, updates, audioFile);
     }
-  }, [selectedSongId, updateSong]);
+  };
 
-  const handleDeleteSong = useCallback(async (songId: string) => {
+  const handleDeleteSong = async (songId: string) => {
     await deleteSong(songId);
     if (selectedSongId === songId) {
       setSelectedSongId(null);
     }
-  }, [deleteSong, selectedSongId]);
+  };
 
-  const handleImportSong = useCallback(async (song: Song) => {
+  const handleImportSong = async (song: Song) => {
     await importSong(song);
     // Optional: auto-select imported song?
     // setSelectedSongId(song.id); 
-  }, [importSong]);
+  };
 
   if (!isLoaded || !promptsLoaded) {
     return (
