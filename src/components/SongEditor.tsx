@@ -1,29 +1,33 @@
-import { Plus, ChevronLeft, MoreVertical, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { LyricsList } from './LyricsList';
-import { AudioPlayer } from './AudioPlayer';
-import { PromptLibraryDialog } from './PromptLibraryDialog';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { useRecorder } from '@/hooks/useRecorder';
-import { useVoiceMixer } from '@/hooks/useVoiceMixer';
-import { useLyricsHistory } from '@/hooks/useLyricsHistory';
-import { useRhymeSuggestions } from '@/hooks/useRhymeSuggestions';
-import { createEmptyLine } from '@/hooks/useSongs';
-import { formatTime, parseTime } from '@/lib/syllables';
-import { exportProjectAsChnt, exportLyricsAsTxt } from '@/lib/projectFile';
-import { toast } from 'sonner';
-import type { Song, LyricLine as LyricLineType, PromptTemplate } from '@/types/song';
-import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { Plus, ChevronLeft, MoreVertical, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { LyricsList } from "./LyricsList";
+import { AudioPlayer } from "./AudioPlayer";
+import { PromptLibraryDialog } from "./PromptLibraryDialog";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+import { useRecorder } from "@/hooks/useRecorder";
+import { useVoiceMixer } from "@/hooks/useVoiceMixer";
+import { useLyricsHistory } from "@/hooks/useLyricsHistory";
+import { useRhymeSuggestions } from "@/hooks/useRhymeSuggestions";
+import { createEmptyLine } from "@/hooks/useSongs";
+import { formatTime, parseTime } from "@/lib/syllables";
+import { exportProjectAsChnt, exportLyricsAsTxt } from "@/lib/projectFile";
+import { toast } from "sonner";
+import type {
+  Song,
+  LyricLine as LyricLineType,
+  PromptTemplate,
+} from "@/types/song";
+import { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 interface SongEditorProps {
   song: Song;
@@ -32,7 +36,12 @@ interface SongEditorProps {
   prompts: PromptTemplate[];
 }
 
-export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps) {
+export function SongEditor({
+  song,
+  onBack,
+  onUpdate,
+  prompts,
+}: SongEditorProps) {
   const [showNotes, setShowNotes] = useState(false);
   const [showPromptLibrary, setShowPromptLibrary] = useState(false);
   const [showRhymePanel, setShowRhymePanel] = useState(false);
@@ -48,9 +57,16 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   const { getCurrentTime } = player;
 
   const recorder = useRecorder(getCurrentTime);
-  const mixer = useVoiceMixer(player.audioElement, recorder.voices, player.isPlaying, player.currentTime);
+  const mixer = useVoiceMixer(
+    player.audioElement,
+    recorder.voices,
+    player.isPlaying,
+    player.currentTime,
+  );
 
-  const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(song.lyrics);
+  const { pushState, undo, resetHistory, canUndo } = useLyricsHistory(
+    song.lyrics,
+  );
 
   const rhymeSuggestions = useRhymeSuggestions();
   const { fetchSuggestions } = rhymeSuggestions;
@@ -60,24 +76,31 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     resetHistory(song.lyrics);
   }, [song.id, resetHistory]);
 
+  // Pre-calculate line times to avoid parsing strings on every frame
+  const lyricTimes = useMemo(() => {
+    return song.lyrics.map((line) => {
+      if (line.type !== "prompt" && line.timestamp) {
+        return parseTime(line.timestamp);
+      }
+      return -1;
+    });
+  }, [song.lyrics]);
+
   // Find the active line based on current playback time
   const activeLineIndex = useMemo(() => {
     if (!player.isPlaying && player.currentTime === 0) return -1;
 
     let activeIndex = -1;
-    for (let i = 0; i < song.lyrics.length; i++) {
-      const line = song.lyrics[i];
-      if (line.type !== 'prompt' && line.timestamp) {
-        const lineTime = parseTime(line.timestamp);
-        if (lineTime <= player.currentTime) {
-          activeIndex = i;
-        } else {
-          break;
-        }
+    for (let i = 0; i < lyricTimes.length; i++) {
+      const lineTime = lyricTimes[i];
+      if (lineTime !== -1 && lineTime <= player.currentTime) {
+        activeIndex = i;
+      } else if (lineTime > player.currentTime) {
+        break;
       }
     }
     return activeIndex;
-  }, [player.currentTime, player.isPlaying, song.lyrics]);
+  }, [player.currentTime, player.isPlaying, lyricTimes]);
 
   const handleAddLine = useCallback(() => {
     const currentLyrics = lyricsRef.current;
@@ -90,54 +113,66 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     const currentLyrics = lyricsRef.current;
     const newLine: LyricLineType = {
       ...createEmptyLine(),
-      type: 'prompt',
+      type: "prompt",
     };
     const newLyrics = [...currentLyrics, newLine];
     pushState(newLyrics, true);
     onUpdate({ lyrics: newLyrics });
   }, [pushState, onUpdate]);
 
-  const handleUpdateLine = useCallback((index: number, updatedLine: LyricLineType) => {
-    const currentLyrics = lyricsRef.current;
-    const newLyrics = [...currentLyrics];
-    newLyrics[index] = updatedLine;
-    pushState(newLyrics);
-    onUpdate({ lyrics: newLyrics });
-  }, [pushState, onUpdate]);
+  const handleUpdateLine = useCallback(
+    (index: number, updatedLine: LyricLineType) => {
+      const currentLyrics = lyricsRef.current;
+      const newLyrics = [...currentLyrics];
+      newLyrics[index] = updatedLine;
+      pushState(newLyrics);
+      onUpdate({ lyrics: newLyrics });
+    },
+    [pushState, onUpdate],
+  );
 
-  const handleInsertLine = useCallback((index: number) => {
-    const currentLyrics = lyricsRef.current;
-    const newLine = createEmptyLine();
-    const newLyrics = [...currentLyrics];
-    newLyrics.splice(index + 1, 0, newLine);
+  const handleInsertLine = useCallback(
+    (index: number) => {
+      const currentLyrics = lyricsRef.current;
+      const newLine = createEmptyLine();
+      const newLyrics = [...currentLyrics];
+      newLyrics.splice(index + 1, 0, newLine);
 
-    pushState(newLyrics, true);
-    onUpdate({ lyrics: newLyrics });
+      pushState(newLyrics, true);
+      onUpdate({ lyrics: newLyrics });
 
-    // Focus the new line (next index)
-    // We set a small timeout to allow the new component to mount
-    setTimeout(() => {
-      setFocusedLineIndex(index + 1);
-    }, 0);
-  }, [pushState, onUpdate]);
+      // Focus the new line (next index)
+      // We set a small timeout to allow the new component to mount
+      setTimeout(() => {
+        setFocusedLineIndex(index + 1);
+      }, 0);
+    },
+    [pushState, onUpdate],
+  );
 
-  const handleDeleteLine = useCallback((index: number) => {
-    const currentLyrics = lyricsRef.current;
-    if (currentLyrics.length <= 1) return;
-    const newLyrics = currentLyrics.filter((_, i) => i !== index);
-    pushState(newLyrics, true);
-    onUpdate({ lyrics: newLyrics });
-  }, [pushState, onUpdate]);
+  const handleDeleteLine = useCallback(
+    (index: number) => {
+      const currentLyrics = lyricsRef.current;
+      if (currentLyrics.length <= 1) return;
+      const newLyrics = currentLyrics.filter((_, i) => i !== index);
+      pushState(newLyrics, true);
+      onUpdate({ lyrics: newLyrics });
+    },
+    [pushState, onUpdate],
+  );
 
-  const handleMarkTimestamp = useCallback((index: number) => {
-    const currentLyrics = lyricsRef.current;
-    const currentTime = getCurrentTime();
-    const timestamp = formatTime(currentTime);
-    const newLyrics = [...currentLyrics];
-    newLyrics[index] = { ...newLyrics[index], timestamp };
-    pushState(newLyrics, true);
-    onUpdate({ lyrics: newLyrics });
-  }, [getCurrentTime, pushState, onUpdate]);
+  const handleMarkTimestamp = useCallback(
+    (index: number) => {
+      const currentLyrics = lyricsRef.current;
+      const currentTime = getCurrentTime();
+      const timestamp = formatTime(currentTime);
+      const newLyrics = [...currentLyrics];
+      newLyrics[index] = { ...newLyrics[index], timestamp };
+      pushState(newLyrics, true);
+      onUpdate({ lyrics: newLyrics });
+    },
+    [getCurrentTime, pushState, onUpdate],
+  );
 
   const handleFocus = useCallback((index: number) => {
     setFocusedLineIndex(index);
@@ -155,9 +190,12 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
 
     if (focusedLineIndex !== null && focusedLineIndex < currentLyrics.length) {
       const line = currentLyrics[focusedLineIndex];
-      if (line.type !== 'prompt') {
+      if (line.type !== "prompt") {
         const newLyrics = [...currentLyrics];
-        newLyrics[focusedLineIndex] = { ...newLyrics[focusedLineIndex], timestamp };
+        newLyrics[focusedLineIndex] = {
+          ...newLyrics[focusedLineIndex],
+          timestamp,
+        };
         pushState(newLyrics, true);
         onUpdate({ lyrics: newLyrics });
       }
@@ -183,18 +221,21 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   }, []);
 
   // Insert prompt content as prompt lines
-  const handleInsertPrompt = useCallback((content: string) => {
-    const currentLyrics = lyricsRef.current;
-    const lines = content.split('\n').filter(line => line.trim());
-    const newPromptLines: LyricLineType[] = lines.map(text => ({
-      ...createEmptyLine(),
-      type: 'prompt' as const,
-      text,
-    }));
-    const newLyrics = [...currentLyrics, ...newPromptLines];
-    pushState(newLyrics, true);
-    onUpdate({ lyrics: newLyrics });
-  }, [onUpdate, pushState]);
+  const handleInsertPrompt = useCallback(
+    (content: string) => {
+      const currentLyrics = lyricsRef.current;
+      const lines = content.split("\n").filter((line) => line.trim());
+      const newPromptLines: LyricLineType[] = lines.map((text) => ({
+        ...createEmptyLine(),
+        type: "prompt" as const,
+        text,
+      }));
+      const newLyrics = [...currentLyrics, ...newPromptLines];
+      pushState(newLyrics, true);
+      onUpdate({ lyrics: newLyrics });
+    },
+    [onUpdate, pushState],
+  );
 
   const handleLoadAudio = () => {
     fileInputRef.current?.click();
@@ -207,28 +248,36 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
   };
 
   // Handle word selection for rhyme suggestions
-  const handleWordSelect = useCallback((word: string) => {
-    fetchSuggestions(word);
-    setShowRhymePanel(true);
-  }, [fetchSuggestions]);
+  const handleWordSelect = useCallback(
+    (word: string) => {
+      fetchSuggestions(word);
+      setShowRhymePanel(true);
+    },
+    [fetchSuggestions],
+  );
 
   // Handle clicking a rhyme word to insert it
-  const handleRhymeWordClick = useCallback((word: string) => {
-    // Fetch new rhymes for the clicked word
-    fetchSuggestions(word);
-  }, [fetchSuggestions]);
+  const handleRhymeWordClick = useCallback(
+    (word: string) => {
+      // Fetch new rhymes for the clicked word
+      fetchSuggestions(word);
+    },
+    [fetchSuggestions],
+  );
 
   // Toggle rhyme panel
   const handleToggleRhymePanel = useCallback(() => {
-    setShowRhymePanel(prev => !prev);
+    setShowRhymePanel((prev) => !prev);
   }, []);
 
   // Total syllables (only count lyric lines)
   const totalSyllables = song.lyrics
-    .filter(line => line.type !== 'prompt')
+    .filter((line) => line.type !== "prompt")
     .reduce((sum, line) => sum + line.syllableCount, 0);
 
-  const lyricLineCount = song.lyrics.filter(line => line.type !== 'prompt').length;
+  const lyricLineCount = song.lyrics.filter(
+    (line) => line.type !== "prompt",
+  ).length;
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
@@ -248,7 +297,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
           />
           {song.audioFileName && (
             <p className="text-xs text-accent font-medium uppercase tracking-wide truncate text-center">
-              {song.audioFileName.replace(/\.[^/.]+$/, '')}
+              {song.audioFileName.replace(/\.[^/.]+$/, "")}
             </p>
           )}
         </div>
@@ -267,7 +316,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
               Exportar Letra (.TXT)
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowNotes(!showNotes)}>
-              {showNotes ? 'Ver letras' : 'Ver notas'}
+              {showNotes ? "Ver letras" : "Ver notas"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLoadAudio}>
               Cambiar audio
@@ -346,9 +395,9 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => { }}
-        onUpdatePrompt={() => { }}
-        onDeletePrompt={() => { }}
+        onAddPrompt={() => {}}
+        onUpdatePrompt={() => {}}
+        onDeletePrompt={() => {}}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />

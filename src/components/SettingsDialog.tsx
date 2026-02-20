@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Settings, Plus, Trash2, Moon, Sun, Key, Download, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -20,6 +20,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSettings } from '@/hooks/useSettings';
 import type { PromptTemplate } from '@/types/song';
 import { toast } from 'sonner';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 
 interface SettingsDialogProps {
   prompts: PromptTemplate[];
@@ -46,6 +47,14 @@ export function SettingsDialog({
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gemini-2.0-flash');
   const [showKey, setShowKey] = useState(false);
+  const [promptToDelete, setPromptToDelete] = useState<PromptTemplate | null>(null);
+
+  const handleConfirmDeletePrompt = useCallback(() => {
+    if (promptToDelete) {
+      onDeletePrompt(promptToDelete.id);
+      setPromptToDelete(null);
+    }
+  }, [onDeletePrompt, promptToDelete]);
 
   useEffect(() => {
     if (open) {
@@ -81,6 +90,7 @@ export function SettingsDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Ajustes">
@@ -246,7 +256,7 @@ export function SettingsDialog({
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onDeletePrompt(prompt.id)}
+                            onClick={() => setPromptToDelete(prompt)}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             aria-label={`Borrar prompt: ${prompt.name}`}
                           >
@@ -321,5 +331,12 @@ export function SettingsDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
+    <DeleteConfirmationDialog
+      open={!!promptToDelete}
+      onOpenChange={(open) => !open && setPromptToDelete(null)}
+      onConfirm={handleConfirmDeletePrompt}
+      description={promptToDelete ? `Se eliminará permanentemente el prompt "${promptToDelete.name}". Esta acción no se puede deshacer.` : undefined}
+    />
+    </>
   );
 }

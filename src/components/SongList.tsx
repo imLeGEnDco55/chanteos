@@ -41,7 +41,7 @@ export function SongList({
 }: SongListProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [songToDelete, setSongToDelete] = useState<string | null>(null);
+  const [songToDelete, setSongToDelete] = useState<Song | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,7 +65,7 @@ export function SongList({
 
   const handleConfirmDelete = () => {
     if (songToDelete) {
-      onDeleteSong(songToDelete);
+      onDeleteSong(songToDelete.id);
       setSongToDelete(null);
     }
   };
@@ -108,6 +108,7 @@ export function SongList({
               onClick={() => fileInputRef.current?.click()}
               disabled={isImporting}
               title="Importar Proyecto (.CHNT)"
+              aria-label="Importar proyecto"
             >
               <Upload className="h-4 w-4" />
             </Button>
@@ -151,9 +152,13 @@ export function SongList({
               .map((song) => (
                 <Card
                   key={song.id}
-                  className="cursor-pointer border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
-                  onClick={() => onSelectSong(song)}
+                  className="group relative border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
                 >
+                  <button
+                    onClick={() => onSelectSong(song)}
+                    className="absolute inset-0 z-0 h-full w-full cursor-pointer rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label={`Abrir canción ${song.title || 'Sin título'}`}
+                  ></button>
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-semibold">{song.title || 'Sin título'}</h3>
@@ -169,25 +174,24 @@ export function SongList({
                       <p className="mt-1 text-xs text-muted-foreground">{formatDate(song.updatedAt)}</p>
                     </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSongToDelete(song.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="pointer-events-auto relative z-10">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Opciones de canción">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => setSongToDelete(song)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -199,6 +203,7 @@ export function SongList({
         open={!!songToDelete}
         onOpenChange={(open) => !open && setSongToDelete(null)}
         onConfirm={handleConfirmDelete}
+        description={songToDelete ? `Se eliminará permanentemente la canción "${songToDelete.title || 'esta canción'}" y todos sus datos. Esta acción no se puede deshacer.` : undefined}
       />
     </div>
   );

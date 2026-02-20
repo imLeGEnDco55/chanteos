@@ -7,7 +7,7 @@ import { usePromptLibrary } from '@/hooks/usePromptLibrary';
 import type { Song } from '@/types/song';
 
 const Index = () => {
-  const { songs, createSong, updateSong, deleteSong, importSong, getSong, isLoaded } = useSongs();
+  const { songs, createSong, updateSong, deleteSong, importSong, getSong, loadSongAudio, isLoaded } = useSongs();
   const { prompts, addPrompt, updatePrompt, deletePrompt, isLoaded: promptsLoaded } = usePromptLibrary();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -22,7 +22,8 @@ const Index = () => {
 
   const handleSelectSong = useCallback((song: Song) => {
     setSelectedSongId(song.id);
-  }, []);
+    loadSongAudio(song.id);
+  }, [loadSongAudio]);
 
   const handleBack = useCallback(() => {
     setSelectedSongId(null);

@@ -5,7 +5,6 @@ import {
   saveAudioToIndexedDB,
   loadAudioFromIndexedDB,
   deleteAudioFromIndexedDB,
-  loadAllAudioFromIndexedDB
 } from '@/lib/audioStorage';
 
 const STORAGE_KEY = 'songwriting-notebook-songs';
@@ -59,33 +58,11 @@ export function useSongs() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load songs and audio on mount
+  // Load songs from localStorage on mount (audio loaded lazily)
   useEffect(() => {
-    async function loadData() {
-      const loadedSongs = loadSongsFromStorage();
-
-      // Load all audio from IndexedDB
-      const audioMap = await loadAllAudioFromIndexedDB();
-
-      // Merge audio data with songs
-      const songsWithAudio = loadedSongs.map(song => {
-        const audioEntry = audioMap.get(song.id);
-        if (audioEntry) {
-          audioCache.set(song.id, audioEntry.blobUrl);
-          return {
-            ...song,
-            audioData: audioEntry.blobUrl,
-            audioFileName: audioEntry.fileName || song.audioFileName,
-          };
-        }
-        return song;
-      });
-
-      setSongs(songsWithAudio);
-      setIsLoaded(true);
-    }
-
-    loadData();
+    const loadedSongs = loadSongsFromStorage();
+    setSongs(loadedSongs);
+    setIsLoaded(true);
   }, []);
 
   // Keep track of the latest songs for cleanup/unmount
@@ -205,6 +182,41 @@ export function useSongs() {
     setSongs(prev => [songData, ...prev]);
   }, []);
 
+  // In-flight guard to prevent race conditions (Devin fix)
+  const loadingAudio = useRef(new Set<string>());
+
+  const loadSongAudio = useCallback(async (songId: string) => {
+    // Already cached
+    if (audioCache.has(songId)) {
+      setSongs(prev => {
+        const song = prev.find(s => s.id === songId);
+        if (song?.audioData) return prev; // Already in state, skip re-render
+        return prev.map(s =>
+          s.id === songId ? { ...s, audioData: audioCache.get(songId)! } : s
+        );
+      });
+      return;
+    }
+
+    // Prevent concurrent loads for the same song
+    if (loadingAudio.current.has(songId)) return;
+    loadingAudio.current.add(songId);
+
+    try {
+      const entry = await loadAudioFromIndexedDB(songId);
+      if (entry) {
+        audioCache.set(songId, entry.blobUrl);
+        setSongs(prev => prev.map(s =>
+          s.id === songId
+            ? { ...s, audioData: entry.blobUrl, audioFileName: entry.fileName || s.audioFileName }
+            : s
+        ));
+      }
+    } finally {
+      loadingAudio.current.delete(songId);
+    }
+  }, []);
+
   return {
     songs,
     isLoaded,
@@ -213,6 +225,7 @@ export function useSongs() {
     deleteSong,
     importSong,
     getSong,
+    loadSongAudio,
   };
 }
 
