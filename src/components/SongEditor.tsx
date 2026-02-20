@@ -75,7 +75,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
     if (!player.isPlaying && player.currentTime === 0) return -1;
 
     let activeIndex = -1;
-    for (let i = 0; i < song.lyrics.length; i++) {
+    for (let i = 0; i < lyricTimes.length; i++) {
       const lineTime = lyricTimes[i];
       if (lineTime !== -1 && lineTime <= player.currentTime) {
         activeIndex = i;
@@ -84,7 +84,7 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
       }
     }
     return activeIndex;
-  }, [player.currentTime, player.isPlaying, song.lyrics, lyricTimes]);
+  }, [player.currentTime, player.isPlaying, lyricTimes]);
 
   const handleAddLine = useCallback(() => {
     const currentLyrics = lyricsRef.current;
