@@ -5,7 +5,6 @@ import {
   saveAudioToIndexedDB,
   loadAudioFromIndexedDB,
   deleteAudioFromIndexedDB,
-  loadAllAudioFromIndexedDB
 } from '@/lib/audioStorage';
 
 const STORAGE_KEY = 'songwriting-notebook-songs';
@@ -63,25 +62,7 @@ export function useSongs() {
   useEffect(() => {
     async function loadData() {
       const loadedSongs = loadSongsFromStorage();
-
-      // Load all audio from IndexedDB
-      const audioMap = await loadAllAudioFromIndexedDB();
-
-      // Merge audio data with songs
-      const songsWithAudio = loadedSongs.map(song => {
-        const audioEntry = audioMap.get(song.id);
-        if (audioEntry) {
-          audioCache.set(song.id, audioEntry.blobUrl);
-          return {
-            ...song,
-            audioData: audioEntry.blobUrl,
-            audioFileName: audioEntry.fileName || song.audioFileName,
-          };
-        }
-        return song;
-      });
-
-      setSongs(songsWithAudio);
+      setSongs(loadedSongs);
       setIsLoaded(true);
     }
 
@@ -193,6 +174,29 @@ export function useSongs() {
     return song;
   }, [songs]);
 
+  const loadSongAudio = useCallback(async (songId: string) => {
+    // Check if already in cache
+    if (audioCache.has(songId)) {
+      const blobUrl = audioCache.get(songId)!;
+      setSongs(prev => prev.map(song =>
+        song.id === songId
+          ? { ...song, audioData: blobUrl }
+          : song
+      ));
+      return;
+    }
+
+    const entry = await loadAudioFromIndexedDB(songId);
+    if (entry) {
+      audioCache.set(songId, entry.blobUrl);
+      setSongs(prev => prev.map(song =>
+        song.id === songId
+          ? { ...song, audioData: entry.blobUrl, audioFileName: entry.fileName || song.audioFileName }
+          : song
+      ));
+    }
+  }, []);
+
   const importSong = useCallback(async (songData: Song): Promise<void> => {
     // Ensure ID is unique or regenerated during import process (already done in projectFile.ts usually)
     // But let's just push it to state.
@@ -213,6 +217,7 @@ export function useSongs() {
     deleteSong,
     importSong,
     getSong,
+    loadSongAudio,
   };
 }
 
