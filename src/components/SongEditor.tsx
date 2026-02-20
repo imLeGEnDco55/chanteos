@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LyricsList } from './LyricsList';
+import { LyricLine } from './LyricLine';
+import { PromptLine } from './PromptLine';
 import { AudioPlayer } from './AudioPlayer';
 import { PromptLibraryDialog } from './PromptLibraryDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -290,17 +291,41 @@ export function SongEditor({ song, onBack, onUpdate, prompts }: SongEditorProps)
         ) : (
           <div className="py-2 pb-40">
             {/* Lyrics lines */}
-            <LyricsList
-              lyrics={song.lyrics}
-              activeLineIndex={activeLineIndex}
-              focusedLineIndex={focusedLineIndex}
-              onUpdateLine={handleUpdateLine}
-              onDeleteLine={handleDeleteLine}
-              onInsertLine={handleInsertLine}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              onWordSelect={handleWordSelect}
-            />
+            {song.lyrics.map((line, index) => (
+              <div
+                key={line.id}
+                className={cn(
+                  "transition-colors duration-200",
+                  line.type !== 'prompt' && activeLineIndex === index && "bg-primary/10"
+                )}
+              >
+                {line.type === 'prompt' ? (
+                  <PromptLine
+                    index={index}
+                    line={line}
+                    onUpdate={handleUpdateLine}
+                    onDelete={handleDeleteLine}
+                    canDelete={song.lyrics.length > 1}
+                    onInsertLine={handleInsertLine}
+                    shouldFocus={focusedLineIndex === index}
+                  />
+                ) : (
+                  <LyricLine
+                    index={index}
+                    line={line}
+                    onUpdate={handleUpdateLine}
+                    onDelete={handleDeleteLine}
+                    onInsertLine={handleInsertLine}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onWordSelect={handleWordSelect}
+                    canDelete={song.lyrics.length > 1}
+                    shouldFocus={focusedLineIndex === index}
+                    isActive={activeLineIndex === index}
+                  />
+                )}
+              </div>
+            ))}
 
             {/* Add line buttons */}
             <div className="mt-3 flex gap-2 px-3">
