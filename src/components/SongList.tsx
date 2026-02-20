@@ -41,7 +41,7 @@ export function SongList({
 }: SongListProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [songToDelete, setSongToDelete] = useState<string | null>(null);
+  const [songToDelete, setSongToDelete] = useState<Song | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,7 +65,7 @@ export function SongList({
 
   const handleConfirmDelete = () => {
     if (songToDelete) {
-      onDeleteSong(songToDelete);
+      onDeleteSong(songToDelete.id);
       setSongToDelete(null);
     }
   };
@@ -171,7 +171,7 @@ export function SongList({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Opciones de canción">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -179,7 +179,7 @@ export function SongList({
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSongToDelete(song.id);
+                            setSongToDelete(song);
                           }}
                           className="text-destructive focus:text-destructive"
                         >
@@ -199,6 +199,11 @@ export function SongList({
         open={!!songToDelete}
         onOpenChange={(open) => !open && setSongToDelete(null)}
         onConfirm={handleConfirmDelete}
+        description={
+          songToDelete
+            ? `¿Estás seguro de que quieres eliminar "${songToDelete.title || 'Sin título'}"? Esta acción no se puede deshacer.`
+            : undefined
+        }
       />
     </div>
   );
