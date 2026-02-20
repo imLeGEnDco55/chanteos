@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Moon, Sun, Key, Download } from 'lucide-react';
+import { Settings, Plus, Trash2, Moon, Sun, Key, Download, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -144,6 +144,15 @@ export function SettingsDialog({
                     placeholder="AIzaSy..."
                     className="flex-1"
                   />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    aria-label={showKey ? "Ocultar clave API" : "Mostrar clave API"}
+                  >
+                    {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   La clave se guarda localmente en tu navegador. Necesaria para sugerencias de rimas.
