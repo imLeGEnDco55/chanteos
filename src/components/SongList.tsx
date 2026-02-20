@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { importProjectFromChnt } from '@/lib/projectFile';
 import { Music, Plus, Trash2, MoreVertical, Upload } from 'lucide-react';
@@ -76,6 +76,11 @@ export function SongList({
     });
   };
 
+  // Memoize sorted songs to avoid mutating props and unnecessary sorting on re-renders
+  const sortedSongs = useMemo(() => {
+    return [...songs].sort((a, b) => b.updatedAt - a.updatedAt);
+  }, [songs]);
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       <header className="border-b border-border/80 bg-card/95 p-4 backdrop-blur">
@@ -126,7 +131,7 @@ export function SongList({
       </header>
 
       <ScrollArea className="min-h-0 flex-1">
-        {songs.length === 0 ? (
+        {sortedSongs.length === 0 ? (
           <div className="flex h-[50vh] flex-col items-center justify-center p-8 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/70 bg-card">
               <Music className="h-8 w-8 text-muted-foreground/60" />
@@ -142,51 +147,49 @@ export function SongList({
           </div>
         ) : (
           <div className="space-y-3 p-4">
-            {songs
-              .sort((a, b) => b.updatedAt - a.updatedAt)
-              .map((song) => (
-                <Card
-                  key={song.id}
-                  className="cursor-pointer border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
-                  onClick={() => onSelectSong(song)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-semibold">{song.title || 'Sin título'}</h3>
-                      <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>{song.lyrics.length} líneas</span>
-                        {song.audioFileName && (
-                          <span className="flex items-center gap-1">
-                            <Music className="h-3 w-3" />
-                            {song.audioFileName}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatDate(song.updatedAt)}</p>
+            {sortedSongs.map((song) => (
+              <Card
+                key={song.id}
+                className="cursor-pointer border-border/70 bg-card/85 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md"
+                onClick={() => onSelectSong(song)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-semibold">{song.title || 'Sin título'}</h3>
+                    <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>{song.lyrics.length} líneas</span>
+                      {song.audioFileName && (
+                        <span className="flex items-center gap-1">
+                          <Music className="h-3 w-3" />
+                          {song.audioFileName}
+                        </span>
+                      )}
                     </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSongToDelete(song.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatDate(song.updatedAt)}</p>
                   </div>
-                </Card>
-              ))}
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSongToDelete(song.id);
+                        }}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </ScrollArea>
