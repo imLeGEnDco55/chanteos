@@ -123,10 +123,7 @@ export const LyricLine = memo(function LyricLine({
       )}
     >
       {/* Timestamp (Ala izquierda) */}
-      <div
-        className="flex items-center justify-start min-w-[32px] pl-1"
-        title="Marca de tiempo"
-      >
+      <div className="flex items-center justify-start min-w-[32px] pl-1">
         <span className={cn(
           "text-[10px] font-mono leading-none select-none",
           isActive ? "text-accent font-medium" : "text-muted-foreground opacity-70"
@@ -150,25 +147,21 @@ export const LyricLine = memo(function LyricLine({
           "flex-1 text-center py-0 px-1 bg-transparent border-none focus-visible:ring-0 focus:bg-background/20 rounded-sm resize-none overflow-hidden outline-none",
           isActive && "text-foreground font-medium"
         )}
-        aria-label={`Línea de letra ${index + 1}`}
       />
 
       {/* Contador de sílabas (Ala derecha) */}
       <div className="flex items-center justify-end min-w-[24px] pr-1">
-        <button
-          type="button"
+        <span
           onClick={() => canDelete && onDelete(index)}
-          disabled={!canDelete}
           className={cn(
-            "text-[10px] font-mono leading-none select-none transition-colors bg-transparent border-none p-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm",
+            "text-[10px] font-mono leading-none select-none transition-colors",
             isActive ? "text-accent font-medium" : line.syllableCount > 0 ? "text-primary" : "text-muted-foreground opacity-50",
             canDelete && "cursor-pointer hover:text-destructive hover:opacity-100 hover:scale-110 transform duration-75"
           )}
-          title={canDelete ? "Borrar línea" : `${line.syllableCount} sílabas`}
-          aria-label={canDelete ? `Borrar línea (${line.syllableCount} sílabas)` : `${line.syllableCount} sílabas`}
+          title={canDelete ? "Borrar línea" : undefined}
         >
           {line.syllableCount}
-        </button>
+        </span>
       </div>
 
     </div>
