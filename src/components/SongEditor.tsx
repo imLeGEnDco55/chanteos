@@ -283,7 +283,12 @@ export function SongEditor({
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
       {/* Header */}
       <header className="flex items-center gap-2 border-b border-border/80 bg-card/95 p-3 backdrop-blur">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          aria-label="Volver"
+        >
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
@@ -294,6 +299,7 @@ export function SongEditor({
             onChange={(e) => onUpdate({ title: e.target.value })}
             className="border-none bg-transparent px-0 text-center text-lg font-bold focus-visible:ring-1"
             placeholder="Título de la canción"
+            aria-label="Título de la canción"
           />
           {song.audioFileName && (
             <p className="text-xs text-accent font-medium uppercase tracking-wide truncate text-center">
@@ -304,7 +310,11 @@ export function SongEditor({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Opciones de canción"
+            >
               <MoreVertical className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
@@ -357,6 +367,7 @@ export function SongEditor({
                 variant="ghost"
                 onClick={handleAddLine}
                 className="flex-1 gap-2 rounded-lg border border-border/60 bg-card/50 text-muted-foreground hover:bg-card hover:text-foreground"
+                aria-label="Añadir nueva línea"
               >
                 <Plus className="h-4 w-4" />
                 Línea
@@ -365,6 +376,7 @@ export function SongEditor({
                 variant="ghost"
                 onClick={handleAddPromptLine}
                 className="flex-1 gap-2 rounded-lg border border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent"
+                aria-label="Añadir bloque de prompt"
               >
                 <FileText className="h-4 w-4" />
                 Prompt
@@ -388,6 +400,7 @@ export function SongEditor({
         accept="audio/*"
         onChange={handleFileChange}
         className="hidden"
+        aria-label="Seleccionar archivo de audio"
       />
 
       {/* Prompt Library Dialog (for inserting only) */}

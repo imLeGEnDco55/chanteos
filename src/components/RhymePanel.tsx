@@ -120,6 +120,7 @@ export const RhymePanel = memo(function RhymePanel({
               size="sm"
               onClick={onRetry}
               className="h-8 w-full border-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              aria-label="Reintentar sugerencias"
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
