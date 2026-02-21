@@ -29,6 +29,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const EMPTY_ARRAY: string[] = [];
+const NO_OP = () => {};
+
 interface SongEditorProps {
   song: Song;
   onBack: () => void;
@@ -395,9 +398,9 @@ export function SongEditor({
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => {}}
-        onUpdatePrompt={() => {}}
-        onDeletePrompt={() => {}}
+        onAddPrompt={NO_OP}
+        onUpdatePrompt={NO_OP}
+        onDeletePrompt={NO_OP}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />
@@ -436,8 +439,8 @@ export function SongEditor({
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
-        rhymes={rhymeSuggestions.suggestions?.rhymes || []}
-        related={rhymeSuggestions.suggestions?.related || []}
+        rhymes={rhymeSuggestions.suggestions?.rhymes || EMPTY_ARRAY}
+        related={rhymeSuggestions.suggestions?.related || EMPTY_ARRAY}
         isLoadingRhymes={rhymeSuggestions.isLoading}
         rhymeError={rhymeSuggestions.error}
         onRhymeWordClick={handleRhymeWordClick}
