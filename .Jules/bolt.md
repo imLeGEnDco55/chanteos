@@ -5,3 +5,7 @@
 ## 2025-05-23 - Testing Environment
 **Learning:** `bun test` fails with `Cannot find module 'react/jsx-dev-runtime'`. The project is configured for `vitest` via `pnpm test`.
 **Action:** Always use `pnpm test` (or `vitest run`) for running tests in this repository.
+
+## 2025-05-24 - RhymePanel & PromptLibraryDialog Optimization
+**Learning:** `SongEditor` (and consequently `AudioPlayer`) re-renders at 60fps due to `currentTime` updates. Passing unstable props (like `[]` or `() => {}`) to memoized child components (`RhymePanel`, `PromptLibraryDialog`) causes them to re-render unnecessarily on every frame, wasting significant CPU cycles.
+**Action:** Always define static `EMPTY_ARRAY` and `NO_OP` constants outside the component scope for default prop values, especially in components driven by high-frequency updates like audio players.
