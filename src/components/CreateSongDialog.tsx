@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Music, Upload } from 'lucide-react';
+import { Music, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,13 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
     const file = e.target.files?.[0];
     if (file) {
       setAudioFile(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setAudioFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -86,15 +93,32 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {audioFile ? audioFile.name : 'Seleccionar archivo de audio'}
-            </Button>
+            <div className={audioFile ? "flex gap-2" : ""}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className={audioFile ? "flex-1 gap-2 truncate justify-start" : "w-full gap-2"}
+                title={audioFile ? audioFile.name : undefined}
+              >
+                <Upload className="h-4 w-4 shrink-0" />
+                <span className="truncate">
+                  {audioFile ? audioFile.name : 'Seleccionar archivo de audio'}
+                </span>
+              </Button>
+              {audioFile && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRemoveFile}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label="Eliminar archivo seleccionado"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2">
