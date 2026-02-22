@@ -12,7 +12,8 @@ import { useVoiceMixer } from "@/hooks/useVoiceMixer";
 import { useLyricsHistory } from "@/hooks/useLyricsHistory";
 import { useRhymeSuggestions } from "@/hooks/useRhymeSuggestions";
 import { createEmptyLine } from "@/hooks/useSongs";
-import { formatTime, parseTime } from "@/lib/syllables";
+import { formatTime } from "@/lib/syllables";
+import { prepareLyricNodes, findActiveLineIndex } from "@/lib/lyrics";
 import { exportProjectAsChnt, exportLyricsAsTxt } from "@/lib/projectFile";
 import { toast } from "sonner";
 import type {
@@ -76,31 +77,16 @@ export function SongEditor({
     resetHistory(song.lyrics);
   }, [song.id, resetHistory]);
 
-  // Pre-calculate line times to avoid parsing strings on every frame
-  const lyricTimes = useMemo(() => {
-    return song.lyrics.map((line) => {
-      if (line.type !== "prompt" && line.timestamp) {
-        return parseTime(line.timestamp);
-      }
-      return -1;
-    });
+  // Pre-calculate sorted lyric nodes for efficient binary search
+  const sortedLyricNodes = useMemo(() => {
+    return prepareLyricNodes(song.lyrics);
   }, [song.lyrics]);
 
-  // Find the active line based on current playback time
+  // Find the active line based on current playback time using binary search
   const activeLineIndex = useMemo(() => {
     if (!player.isPlaying && player.currentTime === 0) return -1;
-
-    let activeIndex = -1;
-    for (let i = 0; i < lyricTimes.length; i++) {
-      const lineTime = lyricTimes[i];
-      if (lineTime !== -1 && lineTime <= player.currentTime) {
-        activeIndex = i;
-      } else if (lineTime > player.currentTime) {
-        break;
-      }
-    }
-    return activeIndex;
-  }, [player.currentTime, player.isPlaying, lyricTimes]);
+    return findActiveLineIndex(sortedLyricNodes, player.currentTime);
+  }, [player.currentTime, player.isPlaying, sortedLyricNodes]);
 
   const handleAddLine = useCallback(() => {
     const currentLyrics = lyricsRef.current;
