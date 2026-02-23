@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Music, Upload } from 'lucide-react';
+import { Music, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,15 +86,46 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {audioFile ? audioFile.name : 'Seleccionar archivo de audio'}
-            </Button>
+            {!audioFile ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Seleccionar archivo de audio
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 justify-start gap-2 truncate"
+                  title="Cambiar archivo"
+                >
+                  <Music className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{audioFile.name}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setAudioFile(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  }}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label="Eliminar archivo seleccionado"
+                  title="Eliminar archivo"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
