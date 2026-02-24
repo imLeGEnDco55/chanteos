@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Music, Upload } from 'lucide-react';
+import { Music, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +41,9 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
       // Reset form
       setTitle('');
       setAudioFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating song:', error);
@@ -49,14 +52,26 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
     }
   };
 
-  const handleClose = () => {
-    setTitle('');
+  const handleDialogChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setTitle('');
+      setAudioFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+    onOpenChange(isOpen);
+  };
+
+  const handleClearFile = () => {
     setAudioFile(null);
-    onOpenChange(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -86,22 +101,43 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {audioFile ? audioFile.name : 'Seleccionar archivo de audio'}
-            </Button>
+
+            {!audioFile ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full gap-2 border-dashed"
+              >
+                <Upload className="h-4 w-4" />
+                Seleccionar archivo de audio
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2 rounded-md border p-2 pl-3 bg-muted/30">
+                <Music className="h-4 w-4 text-primary shrink-0" />
+                <span className="flex-1 truncate text-sm font-medium">
+                  {audioFile.name}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                  onClick={handleClearFile}
+                  title="Eliminar archivo"
+                  aria-label="Eliminar archivo seleccionado"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
-              onClick={handleClose}
+              onClick={() => handleDialogChange(false)}
               className="flex-1"
             >
               Cancelar
