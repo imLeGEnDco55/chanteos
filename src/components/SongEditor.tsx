@@ -29,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const NO_OP = () => {};
+
 interface SongEditorProps {
   song: Song;
   onBack: () => void;
@@ -271,13 +273,18 @@ export function SongEditor({
   }, []);
 
   // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
-    .filter((line) => line.type !== "prompt")
-    .reduce((sum, line) => sum + line.syllableCount, 0);
+  const totalSyllables = useMemo(
+    () =>
+      song.lyrics
+        .filter((line) => line.type !== "prompt")
+        .reduce((sum, line) => sum + line.syllableCount, 0),
+    [song.lyrics],
+  );
 
-  const lyricLineCount = song.lyrics.filter(
-    (line) => line.type !== "prompt",
-  ).length;
+  const lyricLineCount = useMemo(
+    () => song.lyrics.filter((line) => line.type !== "prompt").length,
+    [song.lyrics],
+  );
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
@@ -395,9 +402,9 @@ export function SongEditor({
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => {}}
-        onUpdatePrompt={() => {}}
-        onDeletePrompt={() => {}}
+        onAddPrompt={NO_OP}
+        onUpdatePrompt={NO_OP}
+        onDeletePrompt={NO_OP}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />
