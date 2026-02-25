@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Music, Upload } from 'lucide-react';
+import { Music, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,14 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
     const file = e.target.files?.[0];
     if (file) {
       setAudioFile(file);
+    }
+  };
+
+  const handleClearFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAudioFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -78,23 +86,42 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
           </div>
 
           <div className="space-y-2">
-            <Label>Audio (opcional)</Label>
+            <Label htmlFor="audio-input">Audio (opcional)</Label>
             <input
+              id="audio-input"
               ref={fileInputRef}
               type="file"
               accept="audio/*"
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {audioFile ? audioFile.name : 'Seleccionar archivo de audio'}
-            </Button>
+
+            {audioFile ? (
+               <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                 <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                 <span className="flex-1 truncate">{audioFile.name}</span>
+                 <Button
+                   type="button"
+                   variant="ghost"
+                   size="icon"
+                   className="h-6 w-6 -mr-1"
+                   onClick={handleClearFile}
+                   aria-label="Quitar archivo"
+                 >
+                   <X className="h-4 w-4" />
+                 </Button>
+               </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Seleccionar archivo de audio
+              </Button>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
