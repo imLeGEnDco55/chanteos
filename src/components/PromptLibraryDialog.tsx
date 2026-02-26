@@ -76,12 +76,14 @@ export function PromptLibraryDialog({
                       onChange={(e) => onUpdatePrompt(prompt.id, { name: e.target.value })}
                       placeholder="Nombre del prompt"
                       className="font-medium"
+                      aria-label="Nombre del prompt"
                     />
                     <Textarea
                       value={prompt.content}
                       onChange={(e) => onUpdatePrompt(prompt.id, { content: e.target.value })}
                       placeholder="Contenido..."
                       rows={3}
+                      aria-label="Contenido del prompt"
                     />
                     <Button
                       size="sm"
@@ -152,12 +154,14 @@ export function PromptLibraryDialog({
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="Nombre del prompt"
                     autoFocus
+                    aria-label="Nombre del prompt"
                   />
                   <Textarea
                     value={newContent}
                     onChange={(e) => setNewContent(e.target.value)}
                     placeholder="Contenido del prompt..."
                     rows={3}
+                    aria-label="Contenido del prompt"
                   />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleAdd}>

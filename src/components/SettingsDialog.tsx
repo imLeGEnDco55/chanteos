@@ -230,12 +230,14 @@ export function SettingsDialog({
                           onChange={(e) => onUpdatePrompt(prompt.id, { name: e.target.value })}
                           placeholder="Nombre del prompt"
                           className="font-medium"
+                          aria-label="Nombre del prompt"
                         />
                         <Textarea
                           value={prompt.content}
                           onChange={(e) => onUpdatePrompt(prompt.id, { content: e.target.value })}
                           placeholder="Contenido..."
                           rows={4}
+                          aria-label="Contenido del prompt"
                         />
                         <Button
                           size="sm"
@@ -281,12 +283,14 @@ export function SettingsDialog({
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder="Nombre del prompt"
                       autoFocus
+                      aria-label="Nombre del prompt"
                     />
                     <Textarea
                       value={newContent}
                       onChange={(e) => setNewContent(e.target.value)}
                       placeholder="Contenido del prompt (ej: [Verse], [Chorus]...)"
                       rows={4}
+                      aria-label="Contenido del prompt"
                     />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={handleAdd}>
