@@ -84,4 +84,20 @@ describe('SettingsDialog', () => {
     expect(input).toHaveAttribute('type', 'password');
     expect(screen.getByLabelText('Mostrar clave API')).toBeInTheDocument();
   });
+
+  it('renders accessible inputs for adding a new prompt', () => {
+    render(<SettingsDialog {...defaultProps} />);
+
+    // Open dialog
+    const trigger = screen.getByLabelText('Ajustes');
+    fireEvent.click(trigger);
+
+    // Click "Nuevo prompt"
+    const newPromptButton = screen.getByText('Nuevo prompt');
+    fireEvent.click(newPromptButton);
+
+    // Verify inputs are accessible via label
+    expect(screen.getByLabelText('Nombre del prompt')).toBeInTheDocument();
+    expect(screen.getByLabelText('Contenido del prompt')).toBeInTheDocument();
+  });
 });
