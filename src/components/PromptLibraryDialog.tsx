@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Plus, Trash2, Copy, Check } from 'lucide-react';
 import {
   Dialog,
@@ -24,7 +24,7 @@ interface PromptLibraryDialogProps {
   insertOnly?: boolean;
 }
 
-export function PromptLibraryDialog({
+export const PromptLibraryDialog = memo(function PromptLibraryDialog({
   open,
   onOpenChange,
   prompts,
@@ -190,4 +190,4 @@ export function PromptLibraryDialog({
       </DialogContent>
     </Dialog>
   );
-}
+});
