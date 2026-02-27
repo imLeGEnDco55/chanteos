@@ -14,20 +14,22 @@ import { useRhymeSuggestions } from "@/hooks/useRhymeSuggestions";
 import { createEmptyLine } from "@/hooks/useSongs";
 import { formatTime, parseTime } from "@/lib/syllables";
 import { exportProjectAsChnt, exportLyricsAsTxt } from "@/lib/projectFile";
-import { toast } from "sonner";
 import type {
   Song,
   LyricLine as LyricLineType,
   PromptTemplate,
 } from "@/types/song";
 import { useRef, useState, useMemo, useCallback, useEffect } from "react";
-import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Static constants to prevent re-renders in memoized children
+const NO_OP = () => {};
+const EMPTY_ARRAY: string[] = [];
 
 interface SongEditorProps {
   song: Song;
@@ -395,9 +397,9 @@ export function SongEditor({
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => {}}
-        onUpdatePrompt={() => {}}
-        onDeletePrompt={() => {}}
+        onAddPrompt={NO_OP}
+        onUpdatePrompt={NO_OP}
+        onDeletePrompt={NO_OP}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />
@@ -436,8 +438,8 @@ export function SongEditor({
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
-        rhymes={rhymeSuggestions.suggestions?.rhymes || []}
-        related={rhymeSuggestions.suggestions?.related || []}
+        rhymes={rhymeSuggestions.suggestions?.rhymes || EMPTY_ARRAY}
+        related={rhymeSuggestions.suggestions?.related || EMPTY_ARRAY}
         isLoadingRhymes={rhymeSuggestions.isLoading}
         rhymeError={rhymeSuggestions.error}
         onRhymeWordClick={handleRhymeWordClick}
