@@ -29,6 +29,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+
+const EMPTY_ARRAY: string[] = [];
+const NO_OP = () => {};
+
 interface SongEditorProps {
   song: Song;
   onBack: () => void;
@@ -237,15 +241,15 @@ export function SongEditor({
     [onUpdate, pushState],
   );
 
-  const handleLoadAudio = () => {
+  const handleLoadAudio = useCallback(() => {
     fileInputRef.current?.click();
-  };
+  }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     onUpdate({}, file);
-  };
+  }, [onUpdate]);
 
   // Handle word selection for rhyme suggestions
   const handleWordSelect = useCallback(
@@ -271,13 +275,13 @@ export function SongEditor({
   }, []);
 
   // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
+  const totalSyllables = useMemo(() => song.lyrics
     .filter((line) => line.type !== "prompt")
-    .reduce((sum, line) => sum + line.syllableCount, 0);
+    .reduce((sum, line) => sum + line.syllableCount, 0), [song.lyrics]);
 
-  const lyricLineCount = song.lyrics.filter(
+  const lyricLineCount = useMemo(() => song.lyrics.filter(
     (line) => line.type !== "prompt",
-  ).length;
+  ).length, [song.lyrics]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
@@ -395,9 +399,9 @@ export function SongEditor({
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => {}}
-        onUpdatePrompt={() => {}}
-        onDeletePrompt={() => {}}
+        onAddPrompt={NO_OP}
+        onUpdatePrompt={NO_OP}
+        onDeletePrompt={NO_OP}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />
@@ -436,8 +440,8 @@ export function SongEditor({
         showRhymePanel={showRhymePanel}
         onToggleRhymePanel={handleToggleRhymePanel}
         selectedWord={rhymeSuggestions.selectedWord}
-        rhymes={rhymeSuggestions.suggestions?.rhymes || []}
-        related={rhymeSuggestions.suggestions?.related || []}
+        rhymes={rhymeSuggestions.suggestions?.rhymes || EMPTY_ARRAY}
+        related={rhymeSuggestions.suggestions?.related || EMPTY_ARRAY}
         isLoadingRhymes={rhymeSuggestions.isLoading}
         rhymeError={rhymeSuggestions.error}
         onRhymeWordClick={handleRhymeWordClick}
