@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo, memo } from 'react';
 import { Play, Pause, Repeat, Music, RotateCcw, RotateCw, Hash, Undo2, ChevronLeft, ChevronRight, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -52,7 +52,7 @@ interface AudioPlayerProps {
   onRetryRhymes?: () => void;
 }
 
-export function AudioPlayer({
+export const AudioPlayer = memo(function AudioPlayer({
   isPlaying,
   currentTime,
   duration,
@@ -445,4 +445,4 @@ export function AudioPlayer({
       </button>
     </div>
   );
-}
+});
