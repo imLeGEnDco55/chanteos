@@ -271,13 +271,23 @@ export function SongEditor({
   }, []);
 
   // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
-    .filter((line) => line.type !== "prompt")
-    .reduce((sum, line) => sum + line.syllableCount, 0);
+  // ⚡ Bolt: Memoized and combined loops to prevent O(N) recalculations
+  // during high-frequency renders triggered by audio timeupdates
+  const { totalSyllables, lyricLineCount } = useMemo(() => {
+    let syllables = 0;
+    let count = 0;
+    const lyrics = song.lyrics;
 
-  const lyricLineCount = song.lyrics.filter(
-    (line) => line.type !== "prompt",
-  ).length;
+    for (let i = 0; i < lyrics.length; i++) {
+      const line = lyrics[i];
+      if (line.type !== "prompt") {
+        count++;
+        syllables += line.syllableCount;
+      }
+    }
+
+    return { totalSyllables: syllables, lyricLineCount: count };
+  }, [song.lyrics]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">

@@ -1,0 +1,3 @@
+## 2024-03-24 - React Audio Render Cycles Optimization
+**Learning:** In components driven by high-frequency `timeupdate` audio events (like `SongEditor.tsx`), unmemoized array reductions (e.g., `.filter().reduce()`) run constantly, creating severe performance bottlenecks via unnecessary function allocations and multi-pass iterations.
+**Action:** Always wrap derived state calculations in `useMemo` when they depend on statically-changing state (like `.lyrics`) within a component subject to high-frequency state updates (like `.currentTime`). Replace functional array methods (`filter`, `reduce`) with a single imperative loop (`for`) when computing multiple metrics (e.g., `count`, `totalSyllables`) from the same dataset.
