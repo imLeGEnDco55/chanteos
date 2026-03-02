@@ -29,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const NO_OP = () => {};
+
 interface SongEditorProps {
   song: Song;
   onBack: () => void;
@@ -270,14 +272,21 @@ export function SongEditor({
     setShowRhymePanel((prev) => !prev);
   }, []);
 
-  // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
-    .filter((line) => line.type !== "prompt")
-    .reduce((sum, line) => sum + line.syllableCount, 0);
-
-  const lyricLineCount = song.lyrics.filter(
-    (line) => line.type !== "prompt",
-  ).length;
+  // Total syllables and lyric line count (only count lyric lines)
+  // Memoized and calculated in a single pass to prevent O(N) array allocation
+  // and multiple iterations during high-frequency audio timeupdate renders
+  const { totalSyllables, lyricLineCount } = useMemo(() => {
+    let syllables = 0;
+    let lines = 0;
+    for (let i = 0; i < song.lyrics.length; i++) {
+      const line = song.lyrics[i];
+      if (line.type !== "prompt") {
+        lines++;
+        syllables += line.syllableCount;
+      }
+    }
+    return { totalSyllables: syllables, lyricLineCount: lines };
+  }, [song.lyrics]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
@@ -395,9 +404,9 @@ export function SongEditor({
         open={showPromptLibrary}
         onOpenChange={setShowPromptLibrary}
         prompts={prompts}
-        onAddPrompt={() => {}}
-        onUpdatePrompt={() => {}}
-        onDeletePrompt={() => {}}
+        onAddPrompt={NO_OP}
+        onUpdatePrompt={NO_OP}
+        onDeletePrompt={NO_OP}
         onInsertPrompt={handleInsertPrompt}
         insertOnly
       />
