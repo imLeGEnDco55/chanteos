@@ -270,14 +270,21 @@ export function SongEditor({
     setShowRhymePanel((prev) => !prev);
   }, []);
 
-  // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
-    .filter((line) => line.type !== "prompt")
-    .reduce((sum, line) => sum + line.syllableCount, 0);
-
-  const lyricLineCount = song.lyrics.filter(
-    (line) => line.type !== "prompt",
-  ).length;
+  // Total syllables and line count (only count lyric lines)
+  // Memoized imperative loop for performance during high-frequency timeupdates
+  const { totalSyllables, lyricLineCount } = useMemo(() => {
+    let syllables = 0;
+    let count = 0;
+    const lyricsLength = song.lyrics.length;
+    for (let i = 0; i < lyricsLength; i++) {
+      const line = song.lyrics[i];
+      if (line.type !== "prompt") {
+        syllables += line.syllableCount;
+        count++;
+      }
+    }
+    return { totalSyllables: syllables, lyricLineCount: count };
+  }, [song.lyrics]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
