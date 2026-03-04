@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Music, Upload } from 'lucide-react';
+import { Music, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,15 +86,38 @@ export function CreateSongDialog({ open, onOpenChange, onCreateSong }: CreateSon
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {audioFile ? audioFile.name : 'Seleccionar archivo de audio'}
-            </Button>
+            {audioFile ? (
+              <div className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                <span className="text-sm truncate mr-2" title={audioFile.name}>
+                  {audioFile.name}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setAudioFile(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  }}
+                  aria-label="Quitar archivo de audio"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Seleccionar archivo de audio
+              </Button>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
