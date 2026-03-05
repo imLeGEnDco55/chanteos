@@ -1,7 +1,3 @@
-## 2025-05-23 - SongEditor Optimization
-**Learning:** The `SongEditor` component re-renders frequently (approx 4Hz) because it consumes `currentTime` from `useAudioPlayer` to update the `AudioPlayer` UI. This causes the entire lyrics list to be reconciled on every frame.
-**Action:** Extracted the lyrics rendering logic into a memoized `LyricsList` component. This prevents the list items (which are many) from being diffed/re-rendered when `activeLineIndex` hasn't changed, significantly reducing the main thread work during playback.
-
-## 2025-05-23 - Testing Environment
-**Learning:** `bun test` fails with `Cannot find module 'react/jsx-dev-runtime'`. The project is configured for `vitest` via `pnpm test`.
-**Action:** Always use `pnpm test` (or `vitest run`) for running tests in this repository.
+## 2025-03-04 - Optimize React Derived State In High-Frequency Render Paths
+**Learning:** During high-frequency render events (such as audio time updates playing back), doing chained array operations (like `.filter().map()` or `.filter().reduce()`) on state variables can cause severe performance issues due to O(N * number_of_operations) iterations and unnecessary intermediate array creation via garbage collection overhead.
+**Action:** Replace chained declarative array methods with a single imperative loop. Additionally, wrap the calculation inside `useMemo` so that the result is memoized, meaning the loop will only run if the dependent state changes, avoiding the recalculation entirely on every render tick not related to that state.
