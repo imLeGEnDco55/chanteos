@@ -20,7 +20,7 @@ import type {
   LyricLine as LyricLineType,
   PromptTemplate,
 } from "@/types/song";
-import { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -270,14 +270,20 @@ export function SongEditor({
     setShowRhymePanel((prev) => !prev);
   }, []);
 
-  // Total syllables (only count lyric lines)
-  const totalSyllables = song.lyrics
-    .filter((line) => line.type !== "prompt")
-    .reduce((sum, line) => sum + line.syllableCount, 0);
-
-  const lyricLineCount = song.lyrics.filter(
-    (line) => line.type !== "prompt",
-  ).length;
+  // Total syllables and line count (only count lyric lines)
+  // Optimized: Single pass over the array inside useMemo to avoid repeated allocations
+  // and iterations during high-frequency renders (like audio timeupdates).
+  const { totalSyllables, lyricLineCount } = useMemo(() => {
+    let syllables = 0;
+    let lines = 0;
+    for (const line of song.lyrics) {
+      if (line.type !== "prompt") {
+        syllables += line.syllableCount;
+        lines += 1;
+      }
+    }
+    return { totalSyllables: syllables, lyricLineCount: lines };
+  }, [song.lyrics]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
